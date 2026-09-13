@@ -89,7 +89,8 @@ final class Settings {
 			'providers'      => array(
 				'sms'             => array(
 					'active'  => 'none',
-					'timeout' => 15,
+					// Delivery is in-request, so the request waits for the provider; 10 s bounds a hung gateway.
+					'timeout' => 10,
 				),
 				'sms_credentials' => array(
 					'kavenegar'                 => array(
@@ -407,7 +408,7 @@ final class Settings {
 
 		$sms_active                       = self::allowed( $in['providers']['sms']['active'] ?? '', array( 'none', 'kavenegar', 'melipayamak', 'msgway', 'smsir', 'ippanel', 'ippanel_username_password' ), 'none' );
 		$o['providers']['sms']['active']  = $sms_active;
-		$o['providers']['sms']['timeout'] = max( 5, min( 60, absint( $in['providers']['sms']['timeout'] ?? 15 ) ) );
+		$o['providers']['sms']['timeout'] = max( 5, min( 60, absint( $in['providers']['sms']['timeout'] ?? 10 ) ) );
 
 		foreach ( $d['providers']['sms_credentials'] as $name => $fields ) {
 			foreach ( $fields as $field => $default ) {
@@ -533,7 +534,6 @@ final class Settings {
 	}
 
 	private static function sanitize_meta_key( string $key ): string {
-		// Safe read path for already-validated settings.
 		$validated = self::validate_meta_key( $key );
 		return $validated;
 	}

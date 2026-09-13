@@ -96,7 +96,6 @@ final class Assets {
 
 	private static function is_settings_screen(): bool {
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
-		$tab  = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
 		return $page === 'peyvast-auth-settings';
 	}
 

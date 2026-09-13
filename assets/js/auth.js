@@ -63,6 +63,8 @@
   function createNoticeQueue(root, cfg, i18n) {
     const host = $("[data-peyvast-auth-notice-queue]", root);
     let sequence = 0;
+    let active = null;
+    let activeTimer = 0;
     const iconFor = (type) => cfg.icons?.notice?.[type] || "";
     const closeIcon = () => cfg.icons?.notice?.close || "";
     const remove = (item) => {
@@ -71,23 +73,26 @@
       item.classList.add("is-removing");
       window.setTimeout(() => item.remove(), 180);
     };
+    const discard = () => {
+      window.clearTimeout(activeTimer);
+      activeTimer = 0;
+      active = null;
+      $$(".peyvast-auth-notice", host).forEach((item) => item.remove());
+    };
+    const dismiss = (item) => {
+      if (item === active) {
+        window.clearTimeout(activeTimer);
+        activeTimer = 0;
+        active = null;
+      }
+      remove(item);
+    };
     const push = (message, type = "info", options = {}) => {
       if (!host || !message) return null;
-      const normalized = String(message).trim();
-      const existing = $$(".peyvast-auth-notice", host).find(
-        (item) =>
-          item._peyvastMessage === normalized &&
-          item._peyvastType === type &&
-          !item.classList.contains("is-removing"),
-      );
-      if (existing) {
-        remove(existing);
-      }
+      discard();
       const item = document.createElement("div");
       item.className = `peyvast-auth-notice peyvast-auth-notice--${type}`;
       item.dataset.noticeId = `notice-${Date.now()}-${sequence++}`;
-      item._peyvastMessage = normalized;
-      item._peyvastType = type;
       item.setAttribute("role", type === "error" ? "alert" : "status");
       const icon = document.createElement("span");
       icon.className = "peyvast-auth-notice__icon";
@@ -112,18 +117,19 @@
         closeValue.trim().startsWith("<svg")
       )
         close.innerHTML = closeValue;
-      close.addEventListener("click", () => remove(item));
+      close.addEventListener("click", () => dismiss(item));
       item.append(icon, content, close);
       host.appendChild(item);
+      active = item;
       requestAnimationFrame(() => item.classList.add("is-visible"));
       const duration =
         options.duration == null
           ? 20000
           : Math.max(0, Number(options.duration) || 0);
-      if (duration > 0) window.setTimeout(() => remove(item), duration);
+      if (duration > 0) activeTimer = window.setTimeout(() => dismiss(item), duration);
       return item.dataset.noticeId;
     };
-    return { push, clear: () => $$(".peyvast-auth-notice", host).forEach(remove) };
+    return { push, clear: discard };
   }
 
   const security = (() => {
@@ -423,7 +429,6 @@
       4,
       Math.min(8, parseInt(cfg.otp_length || "6", 10)),
     );
-    // Single OTP pipeline: digits -> ASCII, strip non-digits, clamp to code length. All paths use it.
     const normalizeOtpCode = (value, maxLength = otpLength) =>
       normalizeDigits(value).replace(/\D/g, "").slice(0, maxLength);
     const state = {
@@ -699,8 +704,6 @@
     };
     renderStageTemplates();
 
-    // DOM-built notices: placeholders become escaped text nodes; identifier-
-    // ish placeholders are wrapped in a <strong> styling hook.
     const appendInformationItem = (host, message) => {
       const item = document.createElement("div");
       item.className = "peyvast-auth__information-item";
@@ -834,8 +837,6 @@
           }
           scheduleDeliveryStatusPoll(challengeId, Math.min(wait * 2, 10000), attempt + 1);
         } catch (error) {
-          // Delivery polling is advisory. Never turn a transient status request
-          // failure into an authentication failure or an unbounded request loop.
           if (generation === state.deliveryPollGeneration && challengeId === state.challengeId) {
             scheduleDeliveryStatusPoll(challengeId, Math.min(wait * 2, 10000), attempt + 1);
           }
@@ -1064,7 +1065,6 @@
       ignoreScrollUntil: 0,
     };
     const visualViewport = window.visualViewport || null;
-    // iOS raises the keyboard only for focus inside a gesture's call stack.
     const iOS_KEYBOARD =
       /iPhone|iPad|iPod/i.test(navigator.userAgent || "") ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -1094,7 +1094,6 @@
         actionRect?.bottom || rect.bottom,
       );
       let delta = Math.max(0, requiredBottom - (bottom - margin));
-      // Keep the focused control visible within the reduced viewport.
       if (delta && rect.top - delta < top + margin)
         delta = Math.max(0, rect.top - (top + margin));
       if (!delta) return;
@@ -1134,7 +1133,6 @@
         scheduleFieldVisibility(current);
         return current;
       }
-      // DOM updates must not steal focus; explicit stage transitions pass force=true.
       if (
         !force &&
         current &&
@@ -1151,7 +1149,6 @@
         !current.matches?.(interactiveFieldSelector)
       )
         return current;
-      // After first entry, leave the caret alone; only a fresh OTP entry resets the focus lock.
       if (
         stage.matches('[data-step="otp"]') &&
         otpFocusLocked &&
@@ -1161,7 +1158,6 @@
       }
       const field = firstInteractiveField(stage);
       if (!field) return null;
-      // iOS ignores programmatic focus outside a gesture while the keyboard is closed.
       if (
         iOS_KEYBOARD &&
         !keyboardIsOpen() &&
@@ -1203,7 +1199,6 @@
       if (stage !== "otp") clearSensitiveFields();
       state.step = stage;
       state.autoVerifyLocked = false;
-      // Fresh OTP entry re-enables one-time auto-focus; re-shows keep the caret.
       if (stage === "otp" && previousStage !== stage) {
         otpFocusLocked = false;
       }
@@ -1228,7 +1223,6 @@
         const focusStage = () => {
           if (activeStep() === target) focusActiveStageField({ force: true });
         };
-        // iOS shows the keyboard only for sync focus inside the gesture's call stack.
         if (Date.now() - viewportFocusState.lastGestureAt < 300) focusStage();
         else window.setTimeout(focusStage, 0);
       }
@@ -1394,7 +1388,6 @@
       let identifier = state.identifier;
 
       if (forceResend) {
-        // Resend reads the active OTP transaction, never the previous identifier-stage DOM.
         if (!canResendOtp() || !state.identifier || !state.purpose) {
           syncResendButton();
           return;
@@ -1467,10 +1460,15 @@
           i18n,
         );
 
+        const deliveryStatus = String(data.delivery_status || "");
+        const legacyPendingDelivery =
+          deliveryStatus === "queued" || deliveryStatus === "retrying";
+
         if (
           !data.challenge_id ||
           !Array.isArray(data.channels) ||
-          data.channels.length === 0
+          data.channels.length === 0 ||
+          (deliveryStatus !== "delivered" && !legacyPendingDelivery)
         ) {
           const err = new Error(
             i18n(
@@ -1482,7 +1480,6 @@
           throw err;
         }
 
-        // The server-confirmed challenge is the sole OTP transaction state.
         state.identifier = identifier;
         state.purpose = purpose;
         clearDeliveryStatusPoll();
@@ -1497,15 +1494,14 @@
           focus: true,
         });
         renderInformation(information);
-        if (data.delivery_status === "queued" || data.delivery_status === "retrying") {
-          scheduleDeliveryStatusPoll(state.challengeId, data.delivery_status === "retrying" ? 1500 : 1000);
+        if (legacyPendingDelivery) {
+          scheduleDeliveryStatusPoll(state.challengeId, deliveryStatus === "retrying" ? 1500 : 1000);
         }
-        const deliveryStatus = String(data.delivery_status || "");
         const deliveryNotice = forceResend
           ? i18n("otp_resent", "A new verification code has been sent.")
           : i18n("otp_sent", "The verification code has been sent.");
         notice(
-          data.restored && deliveryStatus !== "queued" && deliveryStatus !== "retrying"
+          data.restored && !legacyPendingDelivery
             ? template(
                 i18n(
                   "restored",
@@ -1516,13 +1512,12 @@
           "success",
         );
       } catch (error) {
+        if (state.step !== "otp") state.challengeId = "";
         if (forceResend && state.step === "otp") {
           const retryAfter = Math.max(0, Number(error?.payload?.retry_after || 0));
           if (retryAfter > 0) {
-            // A server-enforced cooldown/rate limit is authoritative.
             startTimer(retryAfter);
           } else if (state.challengeId) {
-            // Delivery failure keeps the current challenge; the previous OTP stays verifiable.
             state.resendAvailable = true;
             state.timerEndsAt = 0;
             const timer = $("[data-otp-timer]", root);
@@ -2066,10 +2061,8 @@
         input.addEventListener("beforeinput", (event) => {
           if (!event.data) return;
 
-          // Single ASCII digits pass; localized/invalid text is normalized or rejected.
           if (event.inputType === "insertText" && /^[0-9]$/.test(event.data))
             return;
-          // Multi-char insertions (paste, WebOTP, IME) arrive on one box; spread them.
           event.preventDefault();
           if (writeOtpDigits(index, event.data)) {
             clearOtpError();
@@ -2081,7 +2074,6 @@
         const raw = String(input.value || "");
         clearOtpError();
         if (raw.length > 1) {
-          // Autofill bypassing beforeinput dumped the whole code; spread it.
           if (writeOtpDigits(index, raw)) {
             if (otpValue().length === otpLength) verifyOtp();
           }
@@ -2198,7 +2190,6 @@
       showIdentifierError("otp_login");
     }
 
-    // Only a fresh pointer gesture makes iOS raise the keyboard for programmatic focus.
     root.addEventListener(
       "pointerdown",
       () => {
@@ -2260,7 +2251,6 @@
       if (!isInteractiveField(field, stage) || stage !== activeStep()) return;
       if (viewportFocusState.focused !== field) {
         viewportFocusState.focused = field;
-        // One scroll baseline per keyboard session; our own scrolling must not move it.
         if (viewportFocusState.baselineScrollY == null) {
           viewportFocusState.baselineScrollY = window.scrollY;
           viewportFocusState.baselineViewportHeight =

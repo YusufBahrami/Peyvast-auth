@@ -38,7 +38,7 @@ final class IpPanel implements ProviderInterface {
 		$response        = wp_remote_post(
 			$request_url,
 			array(
-				'timeout' => (int) Settings::get( 'providers.sms.timeout', 15 ),
+				'timeout' => (int) Settings::get( 'providers.sms.timeout', 10 ),
 				'headers' => $request_headers,
 				'body'    => wp_json_encode( $payload ),
 			)

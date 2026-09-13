@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Peyvast Auth 1.0.0\n"
 "Report-Msgid-Bugs-To: yusufbahrami985@gmail.com\n"
-"POT-Creation-Date: 2026-09-11 07:42+0330\n"
+"POT-Creation-Date: 2026-09-13 04:29+0330\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <yusufbahrami985@gmail.com>\n"
 "Language-Team: Bahram\n"
@@ -26,15 +26,15 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-1: *.svg\n"
 "X-Poedit-SearchPathExcluded-2: lib\n"
 
-#: assets/js/auth.js:107 src/Presentation/Admin/Logs.php:239
+#: assets/js/auth.js:114 src/Presentation/Admin/Logs.php:239
 #: src/Presentation/Frontend/AuthState.php:395
 msgid "Close"
 msgstr ""
 
-#: assets/js/auth.js:321 assets/js/auth.js:374 assets/js/auth.js:502
-#: assets/js/auth.js:1541 assets/js/auth.js:1683
-#: src/Application/OTP/OtpService.php:43 src/Application/OTP/OtpService.php:74
-#: src/Application/OTP/OtpService.php:134
+#: assets/js/auth.js:329 assets/js/auth.js:382 assets/js/auth.js:510
+#: assets/js/auth.js:1555 assets/js/auth.js:1697
+#: src/Application/OTP/OtpService.php:43 src/Application/OTP/OtpService.php:73
+#: src/Application/OTP/OtpService.php:136
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:72
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:103
 #: src/Presentation/Rest/RestResponse.php:184
@@ -42,17 +42,18 @@ msgstr ""
 msgid "The number of requests exceeds the allowed limit."
 msgstr ""
 
-#: assets/js/auth.js:335 assets/js/auth.js:347 assets/js/auth.js:361
-#: assets/js/auth.js:622 assets/js/auth.js:1546 assets/js/auth.js:1754
-#: assets/js/auth.js:1865 assets/js/auth.js:1926 assets/js/auth.js:1955
-#: src/Application/Authentication/AuthenticationSessionService.php:66
-#: src/Application/OTP/OtpService.php:82 src/Application/OTP/OtpService.php:93
+#: assets/js/auth.js:343 assets/js/auth.js:355 assets/js/auth.js:369
+#: assets/js/auth.js:630 assets/js/auth.js:1560 assets/js/auth.js:1768
+#: assets/js/auth.js:1879 assets/js/auth.js:1940 assets/js/auth.js:1969
+#: src/Application/Authentication/AuthenticationSessionService.php:64
+#: src/Application/OTP/OtpService.php:81 src/Application/OTP/OtpService.php:86
+#: src/Application/OTP/OtpService.php:91
 #: src/Application/Password/PasswordService.php:46
 #: src/Application/Password/PasswordService.php:54
-#: src/Application/Password/PasswordService.php:65
+#: src/Application/Password/PasswordService.php:64
 #: src/Application/Registration/RegistrationService.php:54
-#: src/Application/Registration/RegistrationService.php:115
-#: src/Application/Registration/RegistrationService.php:162
+#: src/Application/Registration/RegistrationService.php:114
+#: src/Application/Registration/RegistrationService.php:161
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:125
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:133
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:160
@@ -61,84 +62,84 @@ msgstr ""
 msgid "A server error occurred. Please try again in a few minutes."
 msgstr ""
 
-#: assets/js/auth.js:829
+#: assets/js/auth.js:836
 msgid "The verification code could not be delivered. Please request a new code."
 msgstr ""
 
-#: assets/js/auth.js:926 src/Presentation/Frontend/AuthState.php:380
+#: assets/js/auth.js:932 src/Presentation/Frontend/AuthState.php:380
 #: src/Presentation/Frontend/AuthState.php:400
 msgid "Resend verification code in {seconds}"
 msgstr ""
 
-#: assets/js/auth.js:1335 assets/js/auth.js:1726 assets/js/auth.js:1791
-#: assets/js/auth.js:1796 assets/js/auth.js:1803 assets/js/auth.js:1811
-#: assets/js/auth.js:1880
+#: assets/js/auth.js:1341 assets/js/auth.js:1740 assets/js/auth.js:1805
+#: assets/js/auth.js:1810 assets/js/auth.js:1817 assets/js/auth.js:1825
+#: assets/js/auth.js:1894
 msgid "Please do not leave this field empty."
 msgstr ""
 
-#: assets/js/auth.js:1354
+#: assets/js/auth.js:1360
 msgid "Please enter a valid mobile number, email address, or username."
 msgstr ""
 
-#: assets/js/auth.js:1359 src/Application/OTP/OtpService.php:39
+#: assets/js/auth.js:1365 src/Application/OTP/OtpService.php:39
 #: src/Presentation/Rest/AuthController.php:111
 msgid "Please enter a valid mobile number or email address."
 msgstr ""
 
-#: assets/js/auth.js:1361
+#: assets/js/auth.js:1367
 msgid "Please enter a valid mobile number."
 msgstr ""
 
-#: assets/js/auth.js:1381 assets/js/auth.js:1915
+#: assets/js/auth.js:1387 assets/js/auth.js:1929
 msgid "Your password was reset successfully."
 msgstr ""
 
-#: assets/js/auth.js:1478
+#: assets/js/auth.js:1491 src/Application/OTP/OtpService.php:104
 msgid "The verification code could not be sent. Please try again in a few minutes."
 msgstr ""
 
-#: assets/js/auth.js:1505 src/Presentation/Frontend/AuthState.php:397
+#: assets/js/auth.js:1517 src/Presentation/Frontend/AuthState.php:397
 msgid "A new verification code has been sent."
 msgstr ""
 
-#: assets/js/auth.js:1506 src/Presentation/Frontend/AuthState.php:396
+#: assets/js/auth.js:1518 src/Presentation/Frontend/AuthState.php:396
 msgid "The verification code has been sent."
 msgstr ""
 
-#: assets/js/auth.js:1512 src/Presentation/Frontend/AuthState.php:398
+#: assets/js/auth.js:1524 src/Presentation/Frontend/AuthState.php:398
 msgid "The code sent to you remains valid for {valid_minutes} minutes. If you have not received it, use Resend code."
 msgstr ""
 
-#: assets/js/auth.js:1617
+#: assets/js/auth.js:1631
 msgid "The verification code is incomplete. Enter all {otp_length} digits."
 msgstr ""
 
-#: assets/js/auth.js:1628 src/Application/OTP/OtpService.php:132
+#: assets/js/auth.js:1642 src/Application/OTP/OtpService.php:134
 msgid "Your verification session is no longer available. Please request a new code."
 msgstr ""
 
-#: assets/js/auth.js:1664 assets/js/auth.js:1745 assets/js/auth.js:1947
+#: assets/js/auth.js:1678 assets/js/auth.js:1759 assets/js/auth.js:1961
 msgid "You have signed in successfully."
 msgstr ""
 
-#: assets/js/auth.js:1686
+#: assets/js/auth.js:1700
 #: src/Infrastructure/Persistence/OtpChallengeStore.php:103
 msgid "The verification code is incorrect."
 msgstr ""
 
-#: assets/js/auth.js:1819
-#: src/Application/Registration/RegistrationService.php:83
+#: assets/js/auth.js:1833
+#: src/Application/Registration/RegistrationService.php:82
 #: src/Presentation/Rest/ProviderTestController.php:23
 msgid "Please enter a valid email address."
 msgstr ""
 
-#: assets/js/auth.js:1829 assets/js/auth.js:1890
-#: src/Application/Password/PasswordService.php:88
-#: src/Application/Registration/RegistrationService.php:90
+#: assets/js/auth.js:1843 assets/js/auth.js:1904
+#: src/Application/Password/PasswordService.php:87
+#: src/Application/Registration/RegistrationService.php:89
 msgid "Please choose a password with at least 8 characters."
 msgstr ""
 
-#: assets/js/auth.js:1855
+#: assets/js/auth.js:1869
 msgid "Your account was created successfully."
 msgstr ""
 
@@ -146,7 +147,7 @@ msgstr ""
 msgid "This account is not allowed to sign in at this time."
 msgstr ""
 
-#: src/Application/Authentication/AuthenticationSessionService.php:123
+#: src/Application/Authentication/AuthenticationSessionService.php:121
 msgid "The authentication session is no longer valid. Please try again."
 msgstr ""
 
@@ -167,19 +168,20 @@ msgstr ""
 msgid "This authentication request is not available."
 msgstr ""
 
-#: src/Application/OTP/OtpService.php:46 src/Application/OTP/OtpService.php:67
-#: src/Application/OTP/OtpService.php:80 src/Application/OTP/OtpService.php:82
+#: src/Application/OTP/OtpService.php:46 src/Application/OTP/OtpService.php:66
+#: src/Application/OTP/OtpService.php:79 src/Application/OTP/OtpService.php:81
+#: src/Application/OTP/OtpService.php:86
 #: src/Presentation/Rest/AuthController.php:104
 msgid "Unable to process the password reset request."
 msgstr ""
 
 #: src/Application/OTP/OtpService.php:49
-#: src/Application/Registration/RegistrationService.php:266
+#: src/Application/Registration/RegistrationService.php:261
 msgid "The information provided could not be used to continue. Please contact the site administrator."
 msgstr ""
 
 #: src/Application/OTP/OtpService.php:50
-#: src/Application/Registration/RegistrationService.php:269
+#: src/Application/Registration/RegistrationService.php:264
 msgid "The information provided could not be used to continue. Please try another sign-in method."
 msgstr ""
 
@@ -192,112 +194,108 @@ msgstr ""
 msgid "User registration is currently disabled."
 msgstr ""
 
-#: src/Application/OTP/OtpService.php:67
-#: src/Application/Password/PasswordService.php:90
+#: src/Application/OTP/OtpService.php:66
+#: src/Application/Password/PasswordService.php:89
 #: src/Application/Registration/RegistrationService.php:37
-#: src/Application/Registration/RegistrationService.php:99
-#: src/Application/Registration/RegistrationService.php:129
-#: src/Application/Registration/RegistrationService.php:145
+#: src/Application/Registration/RegistrationService.php:98
+#: src/Application/Registration/RegistrationService.php:128
+#: src/Application/Registration/RegistrationService.php:144
 msgid "This request is already being processed. Please try again shortly."
 msgstr ""
 
-#: src/Application/OTP/OtpService.php:80
+#: src/Application/OTP/OtpService.php:79
 msgid "No delivery method is currently available for this request."
 msgstr ""
 
-#: src/Application/OTP/OtpService.php:104
-msgid "Authentication delivery is temporarily unavailable. Please try again in a few minutes."
-msgstr ""
-
-#: src/Application/OTP/OtpService.php:143
+#: src/Application/OTP/OtpService.php:153
 msgid "The delivery session is no longer valid."
 msgstr ""
 
-#: src/Application/Password/PasswordService.php:96
+#: src/Application/Password/PasswordService.php:95
 #: src/Presentation/Rest/AuthController.php:203
 #: src/Presentation/Rest/AuthController.php:207
 msgid "The password reset session is no longer valid. Please start again."
 msgstr ""
 
-#: src/Application/Password/PasswordService.php:110
-#: src/Application/Password/PasswordService.php:115
+#: src/Application/Password/PasswordService.php:107
+#: src/Application/Password/PasswordService.php:112
 msgid "The password could not be saved. Please try again shortly."
 msgstr ""
 
-#: src/Application/Password/PasswordService.php:141
+#: src/Application/Password/PasswordService.php:138
 msgid "username or password is not valid."
 msgstr ""
 
 #: src/Application/Registration/RegistrationService.php:31
-#: src/Application/Registration/RegistrationService.php:278
+#: src/Application/Registration/RegistrationService.php:273
 msgid "The registration session is no longer valid. Please start again."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:73
-#: src/Application/Registration/RegistrationService.php:76
-#: src/Application/Registration/RegistrationService.php:80
-#: src/Application/Registration/RegistrationService.php:87
+#: src/Application/Registration/RegistrationService.php:72
+#: src/Application/Registration/RegistrationService.php:75
+#: src/Application/Registration/RegistrationService.php:79
+#: src/Application/Registration/RegistrationService.php:86
 msgid "Please complete all required fields."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:102
-#: src/Application/Registration/RegistrationService.php:169
+#: src/Application/Registration/RegistrationService.php:101
+#: src/Application/Registration/RegistrationService.php:168
 msgid "This email ID is already registered."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:139
-#: src/Application/Registration/RegistrationService.php:172
+#: src/Application/Registration/RegistrationService.php:138
+#: src/Application/Registration/RegistrationService.php:171
 msgid "This username is already in use. Please try again."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:148
+#: src/Application/Registration/RegistrationService.php:147
 msgid "The configured phone username format is unavailable or already in use."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:210
-#: src/Application/Registration/RegistrationService.php:217
+#: src/Application/Registration/RegistrationService.php:206
+#: src/Application/Registration/RegistrationService.php:213
 msgid "The account could not be created. Please try again shortly."
 msgstr ""
 
-#: src/Application/Registration/RegistrationService.php:272
+#: src/Application/Registration/RegistrationService.php:267
 msgid "Authentication is temporarily unavailable for this identifier. Please try again shortly."
 msgstr ""
 
-#: src/Core/Config/Settings.php:192 src/Core/Config/Settings.php:206
+#: src/Core/Config/Settings.php:193 src/Core/Config/Settings.php:207
 #: src/Infrastructure/Providers/Email/WordPressMail.php:21
 msgid "Your website"
 msgstr ""
 
-#: src/Core/Config/Settings.php:206
+#: src/Core/Config/Settings.php:207
 #, php-format
 msgid "Verification code for %s"
 msgstr ""
 
-#: src/Core/Config/Settings.php:210
+#: src/Core/Config/Settings.php:211
 msgid "Your verification code"
 msgstr ""
 
-#: src/Core/Config/Settings.php:211
+#: src/Core/Config/Settings.php:212
 msgid "Enter the one-time code below to continue."
 msgstr ""
 
-#: src/Core/Config/Settings.php:212
+#: src/Core/Config/Settings.php:213
 msgid "This code is valid for {expiration} minutes."
 msgstr ""
 
-#: src/Core/Config/Settings.php:213
+#: src/Core/Config/Settings.php:214
 msgid "If you did not request this code, you can safely ignore this message."
 msgstr ""
 
-#: src/Core/Config/Settings.php:371
+#: src/Core/Config/Settings.php:372
 msgid "The selected user meta key is reserved by Peyvast."
 msgstr ""
 
-#: src/Core/Config/Settings.php:497
+#: src/Core/Config/Settings.php:498
 msgid "No login page selected. WooCommerce redirects will use the alternate page unless a published or private page is selected."
 msgstr ""
 
-#: src/Core/Config/Settings.php:506
+#: src/Core/Config/Settings.php:507
 msgid "The selected logout destination page is unavailable. Please choose a published or private page."
 msgstr ""
 
@@ -379,22 +377,23 @@ msgid "The verification code has expired. Please request a new code."
 msgstr ""
 
 #: src/Infrastructure/WordPress/Installer.php:42
-msgid "Peyvast Auth is running on SQLite (WordPress Studio compatibility layer). MySQL or MariaDB is required for production; authentication delivery requires the encrypted Action Scheduler queue."
+msgid "Peyvast Auth is running on SQLite (WordPress Studio compatibility layer). MySQL or MariaDB is required for production; authentication delivery requires the encrypted OTP delivery store."
 msgstr ""
 
-#: src/Infrastructure/WordPress/Installer.php:50
-msgid "Peyvast Auth 1.0.0 does not support WordPress Multisite. Activate it only on a single-site WordPress installation."
+#: src/Infrastructure/WordPress/Installer.php:53
+#, php-format
+msgid "Peyvast Auth %s does not support WordPress Multisite. Activate it only on a single-site WordPress installation."
 msgstr ""
 
-#: src/Infrastructure/WordPress/Installer.php:51
+#: src/Infrastructure/WordPress/Installer.php:57
 msgid "Peyvast Auth activation not supported"
 msgstr ""
 
-#: src/Infrastructure/WordPress/Installer.php:58
+#: src/Infrastructure/WordPress/Installer.php:64
 msgid "Peyvast Auth could not verify its database schema. Activation has been stopped until all required tables, columns and indexes are available."
 msgstr ""
 
-#: src/Infrastructure/WordPress/Installer.php:59
+#: src/Infrastructure/WordPress/Installer.php:65
 msgid "Peyvast Auth activation failed"
 msgstr ""
 

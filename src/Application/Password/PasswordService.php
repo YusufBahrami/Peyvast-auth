@@ -56,9 +56,8 @@ final class PasswordService {
 			return self::invalid_credentials();
 		}
 		$user = $auth_user instanceof \WP_User ? $auth_user : $user;
-		// Run the core 'authenticate' chain seeded with the verified user so
-		// SSO/2FA/audit plugins participate; core handlers short-circuit on a
-		// WP_User seed, so the password check above cannot be skipped.
+		// Run the core 'authenticate' chain seeded with the verified user so SSO/2FA/audit
+		// plugins participate; core handlers short-circuit on a WP_User seed, so the check holds.
 		$auth_user = apply_filters( 'authenticate', $user, $identifier, (string) $password );
 		if ( is_wp_error( $auth_user ) ) {
 			if ( ! Guard::record_failure( 'password_login', array( 'identifier' => $identifier ) ) ) {
@@ -70,7 +69,7 @@ final class PasswordService {
 		if ( ! AuthenticationAccountPolicy::can_login( $user, 'password' ) ) {
 			return self::invalid_credentials();
 		}
-		// Rehash like core when the configured password algorithm/cost changed.
+		// Rehash like core when the algorithm or cost changed.
 		if ( wp_password_needs_rehash( (string) $user->user_pass, (int) $user->ID ) ) {
 			wp_set_password( (string) $password, (int) $user->ID );
 			$user = get_user_by( 'id', (int) $user->ID ) ?: $user;
@@ -96,9 +95,7 @@ final class PasswordService {
 				if ( ! $processing || (int) $processing->user_id !== (int) $user->ID ) return new \WP_Error( 'invalid_token', __( 'The password reset session is no longer valid. Please start again.', 'peyvast-auth' ) );
 			}
 
-			// The verified token stays in the processing state until the
-			// password is persisted and verified and all sessions are revoked;
-			// every pre-finalization failure releases it for a clean retry.
+			// Token stays in processing until the password is persisted, verified and sessions revoked.
 			$result = wp_update_user(
 				array(
 					'ID'       => (int) $user->ID,
@@ -114,13 +111,13 @@ final class PasswordService {
 				$this->release_processing( $processing );
 				return new \WP_Error( 'storage_failed', __( 'The password could not be saved. Please try again shortly.', 'peyvast-auth' ) );
 			}
-			// A password reset revokes every previously issued WordPress session.
+			// Revoke every previously issued WordPress session.
 			\WP_Session_Tokens::get_instance( (int) $user->ID )->destroy_all();
 			if ( is_user_logged_in() && get_current_user_id() === (int) $user->ID ) {
 				wp_clear_auth_cookie();
 				wp_set_current_user( 0 );
 			}
-			// Finalize only after the password update fully succeeded.
+			// Finalize only after the update fully succeeded.
 			if ( $processing ) {
 				if ( ! $this->challenges->finish_verified_token_processing( (int) $processing->id ) ) {
 					Logger::error( 'auth', 'reset_token_finalize_failed', 'Password updated but the reset token could not be finalized; the challenge expires and is purged automatically.', array( 'recovery' => true ), (int) $user->ID );

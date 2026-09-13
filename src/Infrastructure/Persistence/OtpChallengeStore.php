@@ -204,8 +204,16 @@ final class OtpChallengeStore {
 		return $row && strtotime( (string) $row->expires_at ) > time() && $this->guest_session_matches( $row ) ? $row : null;
 	}
 
-	public function invalidate( string $challenge_id ): bool {
-		$lock = DatabaseLock::acquire( 'otp-challenge:' . hash( 'sha256', $challenge_id ), 5 );
+	/**
+	 * Invalidate a challenge under its per-challenge lifecycle lock.
+	 *
+	 * The timeout is the bounded wait on that lock; callers performing a
+	 * bounded cleanup retry may pass a shorter timeout so contention cannot add
+	 * a second full-length wait to an already-failed request. A value of 0
+	 * performs a single non-blocking attempt.
+	 */
+	public function invalidate( string $challenge_id, int $timeout = 5 ): bool {
+		$lock = DatabaseLock::acquire( 'otp-challenge:' . hash( 'sha256', $challenge_id ), $timeout );
 		if ( ! $lock ) return false;
 		try {
 			return $this->invalidate_locked( $challenge_id );

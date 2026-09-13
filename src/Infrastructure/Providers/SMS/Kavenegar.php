@@ -29,7 +29,7 @@ final class Kavenegar implements ProviderInterface {
 		$response      = wp_remote_post(
 			$endpoint,
 			array(
-				'timeout' => (int) Settings::get( 'providers.sms.timeout', 15 ),
+				'timeout' => (int) Settings::get( 'providers.sms.timeout', 10 ),
 				'body'    => $request_body,
 			)
 		);

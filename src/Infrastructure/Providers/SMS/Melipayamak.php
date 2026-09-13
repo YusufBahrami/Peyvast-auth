@@ -35,7 +35,7 @@ final class Melipayamak implements ProviderInterface {
 					'encoding'           => 'UTF-8',
 					'exceptions'         => true,
 					'trace'              => true,
-					'connection_timeout' => (int) Settings::get( 'providers.sms.timeout', 15 ),
+					'connection_timeout' => (int) Settings::get( 'providers.sms.timeout', 10 ),
 				)
 			);
 

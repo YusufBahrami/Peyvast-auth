@@ -21,8 +21,7 @@ final class PhoneIdentityIndex {
 	private const REBUILD_RETRY_CAP_SEC  = 10 * MINUTE_IN_SECONDS;
 
 	public static function boot(): void {
-		// The rebuild handler is registered by the Scheduler layer; this method
-		// only wires the live index-maintenance hooks.
+		// The rebuild handler belongs to the Scheduler layer; only live index hooks are wired here.
 		add_action( 'added_user_meta', array( self::class, 'on_meta_change' ), 10, 4 );
 		add_action( 'updated_user_meta', array( self::class, 'on_meta_change' ), 10, 4 );
 		add_action( 'deleted_user_meta', array( self::class, 'on_deleted_meta' ), 10, 4 );
@@ -33,14 +32,20 @@ final class PhoneIdentityIndex {
 		if ( ! self::table_available() ) {
 			return false;
 		}
-		static $schema_checked = null;
-		if ( $schema_checked === null ) {
-			$health = get_option( 'peyvast_auth_schema_health', array() );
-			$schema_checked = is_array( $health ) && (string) ( $health['status'] ?? '' ) === 'ready'
-				? true
-				: \Peyvast\Auth\Infrastructure\WordPress\Installer::schema_ready();
+		// Only a positive probe is memoized: the schema self-heals, so a negative result
+		// must not outlive a repair performed later in the same request.
+		static $schema_checked = false;
+		if ( $schema_checked ) {
+			return true;
 		}
-		return $schema_checked;
+		$health = get_option( 'peyvast_auth_schema_health', array() );
+		$ready  = is_array( $health ) && (string) ( $health['status'] ?? '' ) === 'ready'
+			? true
+			: \Peyvast\Auth\Infrastructure\WordPress\Installer::schema_ready();
+		if ( $ready ) {
+			$schema_checked = true;
+		}
+		return $ready;
 	}
 
 	/** Distinguishes schema health from rebuild readiness for admin/runtime diagnostics. */
@@ -553,8 +558,7 @@ final class PhoneIdentityIndex {
 			return;
 		}
 		if ( ( $state['phase'] ?? '' ) === 'complete' && (int) ( $state['primary_failure_count'] ?? 0 ) === 0 && $source === self::SOURCE_PRIMARY ) {
-			// A successful live sync already proves the row was written. Keep live
-			// meta-update hooks O(1); aggregate rebuild progress is owned by workers.
+			// A live sync already proves the row was written; rebuild progress belongs to workers.
 			$state['primary_status'] = 'ready';
 			$state['completed_at']   = (int) ( $state['completed_at'] ?? time() );
 			$state['updated_at']     = time();
@@ -618,8 +622,7 @@ final class PhoneIdentityIndex {
 		$available = (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', PEYVAST_AUTH_PHONE_IDENTITY_TABLE ) ) === PEYVAST_AUTH_PHONE_IDENTITY_TABLE;
 		if ( ! $available ) {
 			static $repair_attempted = false;
-			// A negative result is never permanently cached as the runtime truth, but
-			// schema repair itself is attempted at most once per request.
+			// Repair is attempted at most once per request; a negative result is never cached as truth.
 			if ( ! $repair_attempted ) {
 				$repair_attempted = true;
 				if ( \Peyvast\Auth\Infrastructure\WordPress\Installer::ensure_schema() ) {
@@ -658,7 +661,7 @@ final class PhoneIdentityIndex {
 		try {
 			self::sync_deleted_meta( $meta_ids, $user_id, $meta_key, $meta_value );
 		} catch ( \Throwable $e ) {
-			// Index cleanup must never make authoritative metadata deletion fatal; the rebuild repairs it.
+			// Index cleanup must never make authoritative metadata deletion fatal.
 			self::record_live_failure( self::SOURCE_PRIMARY );
 		}
 	}

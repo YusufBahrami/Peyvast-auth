@@ -12,10 +12,9 @@ final class EmailMasker {
 		[$local, $domain] = explode( '@', $email, 2 );
 		$length           = strlen( $local );
 		if ( $length <= 1 ) {
-			// Single-char local part: mask it entirely.
 			$masked = '***';
 		} else {
-			// Exactly three stars; reveal half the local part, capped at five visible chars.
+			// Exactly three stars; at most five visible characters.
 			$visible = min( 5, max( 1, intdiv( $length, 2 ) ) );
 			$masked  = substr( $local, 0, $visible ) . '***';
 		}

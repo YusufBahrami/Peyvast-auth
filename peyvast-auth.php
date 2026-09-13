@@ -3,7 +3,7 @@
  * Plugin Name:       Peyvast Auth
  * Plugin URI:        https://github.com/yusufbahrami/peyvast-auth
  * Description:       Secure phone and email OTP authentication with password login, registration and Iran provider integrations.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.8
  * Requires PHP:      8.1
  * Tested up to:      7.1
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PEYVAST_AUTH_VERSION', '1.0.0' );
+define( 'PEYVAST_AUTH_VERSION', '1.0.1' );
 define( 'PEYVAST_AUTH_TEXT_DOMAIN', 'peyvast-auth' );
 define( 'PEYVAST_AUTH_FILE', __FILE__ );
 define( 'PEYVAST_AUTH_DIR', plugin_dir_path( __FILE__ ) );

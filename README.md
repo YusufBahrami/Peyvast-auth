@@ -1,5 +1,7 @@
 # Peyvast Auth
 
+> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
+
 Peyvast Auth is a WordPress authentication plugin with phone and email OTP login, password authentication, registration, password recovery, optional Google Sign-In, Iranian SMS and WordPress email providers, and integrations for WooCommerce, Bricks, and Blocks.
 
 ## What the plugin does
@@ -29,7 +31,7 @@ The Peyvast Mobile Number field on user profiles accepts supported national and 
 1. The browser submits `send-otp` with an identifier and purpose `otp_login`.
 2. The server normalizes the identifier, checks configured capabilities, resolves existing identity data, evaluates server-side security buckets, and applies the resend cooldown.
 3. A challenge stores only an HMAC OTP digest, expiry, purpose, a site-keyed HMAC identifier hash, delivery channels, and an opaque guest-session binding.
-4. The code is delivered through the configured SMS or email adapter. All configured channels are mandatory: delivery is asynchronous, the code is encrypted at rest in the delivery queue and sent by a background Action Scheduler job, and only channels that failed are retried, so the request does not wait for provider latency. The queued job re-validates the challenge before sending, so a code can never be delivered after the challenge is invalidated, replaced, expired, or consumed. If queue persistence or scheduling is unavailable, the challenge is invalidated and the request fails fast; provider HTTP delivery is never performed inside the authentication request.
+4. The code is delivered through the configured SMS or email adapter **inside the same request**. The code is encrypted at rest in a short-lived delivery staging row and never leaves the server in plaintext. All configured channels are mandatory: the request succeeds only when every configured channel accepted the code, and the challenge is re-validated under its lifecycle lock immediately before sending, so a code can never be delivered for an invalidated, replaced, expired, or consumed challenge. On success the staging row is deleted and the challenge stays valid; on failure the challenge is invalidated, the staging row is deleted, and the request returns an explicit delivery error instead of pretending a code was sent. Nothing is retried in the background, so a failed code can never arrive later. If the staging row cannot be persisted, the request fails fast with a storage error before any provider call.
 5. The browser submits `verify-otp` with the challenge ID and code.
 6. Successful verification creates a short-lived, single-use verification token.
 7. `otp-login` consumes that token and creates the WordPress session. If no account exists, `register` consumes the registration token instead.
@@ -38,7 +40,7 @@ The Peyvast Mobile Number field on user profiles accepts supported national and 
 
 The Redirects settings provide independent destinations for WooCommerce customer logout and native WordPress logout. Disable preserves each platform's existing default. Specific pages and custom URLs are restricted to internal site destinations. Login/registration origin fallback is shown and used only when Return to origin is selected.
 
-OTP delivery is asynchronous, but the frontend reports successful handoff simply as **The verification code has been sent.** Resend reports **A new verification code has been sent.** Background delivery state is not presented to users. The OTP information area contains only its primary information message.
+The frontend enters the OTP stage only after the server confirms delivery. **The verification code has been sent.** therefore means the configured channels accepted the code during that request; a delivery failure shows an error and keeps the user on the identifier (or password-reset) stage. Resend reports **A new verification code has been sent.** under the same rule. The OTP information area contains only its primary information message.
 
 ### Password login
 
@@ -89,7 +91,7 @@ Activation creates five InnoDB tables using the WordPress database prefix:
 - `{prefix}peyvast_auth_phone_identity`
 - `{prefix}peyvast_auth_logs`
 - `{prefix}peyvast_auth_security_state`
-- `{prefix}peyvast_auth_otp_deliveries` (encrypted at-rest queue for asynchronous OTP delivery)
+- `{prefix}peyvast_auth_otp_deliveries` (encrypted at-rest delivery staging rows, and the queue for OTP transactions created before 1.0.1)
 
 The plugin stores its settings and operational keys under the `peyvast_auth_` namespace. Uninstall cleanup is conditional on the administrator's **delete data on uninstall** setting and removes migration cancellation state together with the other plugin-owned options.
 
@@ -124,12 +126,12 @@ All endpoints are POST routes with argument schemas. Public permission callbacks
 
 Phone numbers are normalized into a canonical Iranian mobile representation. The primary phone is stored in `_peyvast_auth_phone`; a keyed canonical hash is stored in `_peyvast_auth_phone_canonical`; the identity table accelerates lookup. Privacy erasure removes these values and related plugin-owned rows.
 
-See `ARCHITECTURE.md` for detailed components and data flow, `STRUCTURE.md` for the repository map, `SECURITY.md` for vulnerability reporting, `CONTRIBUTING.md` for development rules.
+See `ARCHITECTURE.md` for detailed components and data flow, `STRUCTURE.md` for the repository map, `document.md` for the current technical reference, and `SECURITY.md` for security design and vulnerability reporting.
 
-## Production Architecture Notes (1.0.0)
+## Production Architecture Notes (1.0.1)
 
-Peyvast Auth 1.0.0 is intended for single-site WordPress installations. Multisite activation is explicitly rejected.
+Peyvast Auth 1.0.1 is intended for single-site WordPress installations. Multisite activation is explicitly rejected.
 
 Phone identity indexing is performed in background batches. Authentication requests never perform a database-wide phone-meta scan or index rebuild. Rebuilds use keyset cursors and resumable Action Scheduler jobs.
 
-OTP provider delivery is asynchronous. The REST response distinguishes queue persistence from final delivery, and the frontend consumes `delivery-status` with bounded polling. When phone OTP is configured for secondary email delivery, the API exposes only the presence of the email channel and a privacy-safe masked presentation; the raw account email is never returned.
+Initial OTP provider delivery happens synchronously inside the authentication request, so the user-visible latency is application processing plus provider latency without any queue dispatch delay. `send-otp` returns `delivery_status: delivered` only after the configured channels accepted the code; the `delivery-status` endpoint and its bounded polling remain in place for transactions queued by earlier versions and are only used for `queued`/`retrying` responses. Action Scheduler keeps running the background work (maintenance, cleanup, watchdogs, phone migration, identity-index rebuild, lazy migration) and drains already-queued OTP delivery actions safely. When phone OTP is configured for secondary email delivery, the API exposes only the presence of the email channel and a privacy-safe masked presentation; the raw account email is never returned.

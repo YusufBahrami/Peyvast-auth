@@ -92,7 +92,6 @@ final class SecurityStateStore {
 					continue;
 				}
 
-				// FIXED_WINDOW
 				$expired                  = ( (int) $row['window_started_at'] + $window ) <= $now;
 				$count                    = $expired ? 1 : min( (int) $row['count'] + 1, $limit + 1 );
 				$verdicts[ $dim ]         = $count <= $limit;
@@ -231,7 +230,7 @@ final class SecurityStateStore {
 				}
 				$row = $wpdb->get_row( $wpdb->prepare( 'SELECT version FROM ' . self::table() . ' WHERE bucket_key = %s FOR UPDATE', $bucket ) );
 				if ( ! $row ) {
-					continue; // nothing to reset.
+					continue;
 				}
 				$now     = time();
 				$updated = $wpdb->query(

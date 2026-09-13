@@ -1,12 +1,14 @@
 # Peyvast Auth Architecture
 
+> **Document status:** Peyvast Auth 1.0.1
+
 ## Scope
 
 Peyvast Auth is a WordPress plugin organized around domain rules, application use cases, WordPress infrastructure, REST presentation, and optional integrations. The bootstrap file is `peyvast-auth.php`; the PHP namespace is `Peyvast\Auth`.
 
 ## Bootstrap and lifecycle
 
-The bootstrap defines version `1.0.0`, the text domain `peyvast-auth`, filesystem/URL constants, the settings option name, and five canonical table constants (including the OTP delivery queue). It loads the bundled Action Scheduler bootstrap from `lib/action-scheduler` at plugin load time — registering the bundled version and letting Action Scheduler itself select the newest registered runtime version, so the plugin coexists with WooCommerce or any other plugin that bundles Action Scheduler. It registers a PSR-4-like local autoloader mapping `Peyvast\Auth\X\Y` to `src/X/Y.php`, activation/deactivation callbacks, and the `plugins_loaded` boot callback.
+The bootstrap defines version `1.0.1`, the text domain `peyvast-auth`, filesystem/URL constants, the settings option name, and five canonical table constants (including the OTP delivery queue). It loads the bundled Action Scheduler bootstrap from `lib/action-scheduler` at plugin load time — registering the bundled version and letting Action Scheduler itself select the newest registered runtime version, so the plugin coexists with WooCommerce or any other plugin that bundles Action Scheduler. It registers a PSR-4-like local autoloader mapping `Peyvast\Auth\X\Y` to `src/X/Y.php`, activation/deactivation callbacks, and the `plugins_loaded` boot callback.
 
 `Core\Plugin::boot()` runs once. It registers the runtime database-engine notice, starts the guest session and phone identity index, wires the scheduler layer and recurring actions, registers privacy hooks, settings, migration services, admin UI, REST routes, frontend assets, WooCommerce, Bricks, Blocks, and redirect behavior.
 
@@ -22,7 +24,7 @@ The bootstrap defines version `1.0.0`, the text domain `peyvast-auth`, filesyste
 - `Scheduler::HOOK_PHONE_INDEX_REBUILD` (chained single actions) — identity-index rebuild batches.
 - `Scheduler::HOOK_MIGRATION_WATCHDOG` (recurring, daily) — re-arms a stalled migration/index chain.
 - `Scheduler::HOOK_LAZY_PHONE_MIGRATION` (async) — background lazy phone migration.
-- `Scheduler::HOOK_DELIVER_OTP` (single actions) — asynchronous provider delivery.
+- `Scheduler::HOOK_DELIVER_OTP` (single actions) — asynchronous provider delivery for OTP transactions queued by versions before 1.0.1. New 1.0.1 OTP requests deliver inside the request and never enqueue this action.
 
 Every job is idempotent and bounded; retries use unique action arguments with exponential backoff; duplicate workers are prevented by database locks.
 
@@ -45,14 +47,14 @@ Every job is idempotent and bounded; retries use unique action arguments with ex
 
 ### Application
 
-- `Application\OTP\OtpService`: parse identifiers, resolve accounts, apply capabilities/security, create challenges, queue encrypted delivery, verify codes, and issue verification tokens. Unknown email logins and unknown reset identifiers receive success-shaped neutral responses (no storage, no delivery) to prevent account enumeration.
+- `Application\OTP\OtpService`: parse identifiers, resolve accounts, apply capabilities/security, create challenges, deliver the code synchronously through the provider layer, verify codes, and issue verification tokens. Unknown email logins and unknown reset identifiers receive success-shaped neutral responses (no storage, no delivery) to prevent account enumeration.
 - `Application\Password\PasswordService`: password login and verified password reset. Login runs `wp_authenticate_user` plus the full core `authenticate` chain seeded with the verified user; reset holds the token in a recoverable processing state until the password is persisted, verified, and sessions revoked.
 - `Application\Registration\RegistrationService`: locked account creation, metadata/index persistence, session creation, and compensating cleanup. The verified token stays in the processing state until every coupled write succeeds, and is released on every pre-finalization failure path.
 - `Application\Authentication\AuthenticationSessionService`: WordPress session creation, OTP token consumption, redirect selection, and optional lazy phone migration.
 - `Application\Authentication\GoogleAuthenticationService`: Google JWT and JWKS verification.
 - `Application\Migration`: configured user-meta phone migration, chained batch scheduling, status, named-lock serialization for migration state, and identity-index rebuild coordination.
 - `Infrastructure\Scheduling\Scheduler`: centralized Action Scheduler ownership, recurring-job lifecycle, and unique scheduling.
-- `Infrastructure\Scheduling\OtpDeliveryHandler`: background provider delivery with challenge re-validation, idempotency, and bounded retries. All configured channels are mandatory: a failed channel is retried independently (the queued payload is rewritten to the remaining channels), and the challenge is invalidated only when a channel permanently fails.
+- `Infrastructure\Scheduling\OtpDeliveryHandler`: the single provider-delivery implementation. `deliver_now()` performs one challenge-validated delivery attempt inside the current request (the 1.0.1 path) and returns an explicit success/failure result; `deliver()` drains actions queued by earlier versions with idempotency and bounded retries. All configured channels are mandatory in both paths: a failed channel is retried independently on the queued path (the payload is rewritten to the remaining channels), and the challenge is invalidated once a channel permanently fails.
 
 ### Email delivery and templates
 
@@ -65,7 +67,7 @@ The adapter passes `Content-Type: text/html; charset=UTF-8` directly to `wp_mail
 ### Infrastructure
 
 - `Infrastructure\Persistence\OtpChallengeStore`: challenge CRUD, cooldown lookup, row locking, verification, token processing, consumption, and bounded purge.
-- `Infrastructure\Persistence\OtpDeliveryStore`: AES-256-GCM encrypted at-rest queue for async OTP delivery, retry accounting, and orphan cleanup. Encryption keys derive from `wp_salt('auth')` (deployment secrets, never a database-stored option).
+- `Infrastructure\Persistence\OtpDeliveryStore`: AES-256-GCM encrypted at-rest staging store for OTP delivery (and the delivery queue for transactions created before 1.0.1), with retry accounting and orphan cleanup. Encryption keys derive from `wp_salt('auth')` (deployment secrets, never a database-stored option).
 - `Infrastructure\Persistence\PhoneIdentityIndex`: primary/configured-source index maintenance and chained rebuild jobs.
 - `Infrastructure\Persistence\SecurityStateStore`: atomic security bucket state.
 - `Infrastructure\Persistence\DatabaseLock`: MySQL named locks derived from a site secret, with an in-process serialization fallback when the native `GET_LOCK()` function is unavailable (for example under Studio's SQLite layer).
@@ -88,7 +90,7 @@ WooCommerce integration is optional and guarded by function/class availability. 
 
 ### OTP send
 
-The REST controller verifies the `peyvast_auth` nonce and origin, validates purpose and configured identifier capabilities, and calls `OtpService`. The service canonicalizes the identifier, evaluates the relevant security scope, resolves the account, checks registration/reset policy, acquires a deterministic database lock, reuses a valid challenge during cooldown when appropriate, creates a new challenge, encrypts the code into the delivery queue (failing fast when the delivery queue is unavailable when the queue is unavailable), schedules a unique `HOOK_DELIVER_OTP` action, invalidates failed challenges, and returns only safe challenge/information fields. Unknown email logins and unknown reset identifiers get a fabricated success response with the same shape, status, cooldown, and expiry as a real challenge, so probing cannot distinguish existing from non-existing accounts. The background handler re-validates the challenge immediately before sending — an invalidated, replaced, expired, or consumed challenge is never delivered — treats every configured channel as mandatory, retries only failed channels with exponential backoff, and invalidates the challenge when a channel permanently fails. There is no synchronous provider fallback: queue persistence/scheduling failure invalidates the challenge and returns a temporary-unavailable error without waiting on provider HTTP.
+The REST controller verifies the `peyvast_auth` nonce and origin, validates purpose and configured identifier capabilities, and calls `OtpService`. The service canonicalizes the identifier, evaluates the relevant security scope, resolves the account, checks registration/reset policy, acquires a deterministic database lock, reuses a valid challenge during cooldown when appropriate, creates a new challenge, and encrypts the code and destinations into the delivery staging row. It then delivers the code inside the same request through `OtpDeliveryHandler::deliver_now()`: the challenge is re-validated under its lifecycle lock, every configured channel is mandatory, and the call returns an explicit aggregate result. On success the staging row is deleted, the challenge stays valid, and the response reports `delivery_status: delivered`; on failure the challenge is invalidated and the staging row is discarded only once that invalidation is confirmed from the database (a bounded retry follows if the per-challenge lifecycle lock is contended, and the payload is retained when confirmation fails so a usable challenge is never left without delivery evidence), and the request returns `delivery_failed` — so a code the user was told failed can never arrive later and no background job is enqueued. Failure to persist the encrypted staging row is a fail-fast `storage_failed`/`reset_unavailable` error before any provider call. Failed challenges are invalidated, and only safe challenge/information fields are returned. Unknown email logins and unknown reset identifiers get a fabricated success response with the same shape, status, cooldown, and expiry as a real challenge, so probing cannot distinguish existing from non-existing accounts.
 
 ### OTP verification and consumption
 
@@ -121,13 +123,13 @@ Settings, cache keys, scheduled hooks, cookies, DOM identifiers, and plugin meta
 ## Installation and uninstall
 
 Activation creates/updates the five InnoDB tables with `dbDelta`, verifies required columns/indexes, installs defaults, creates the identifier HMAC key, and persists the background index state; Action Scheduler jobs are enqueued after scheduler initialization. A recurring schema watchdog re-runs the same table creation and schema verification and records schema health. Deactivation cancels only Peyvast Auth-owned Action Scheduler actions and preserves data. Uninstall removes data only when enabled in settings, including options (such as migration cancellation state), transients, scheduled actions, tables, phone metadata, related OTP rows, delivery rows, identity rows, and user logs. Production deployments should use MySQL or MariaDB; Studio's SQLite layer is intended for local development compatibility.
-## 1.0.0 Production Runtime / Performance Notes
+## 1.0.1 Production Runtime / Performance Notes
 
-- Peyvast Auth 1.0.0 is a single-site plugin. WordPress Multisite is explicitly unsupported and activation is rejected on Multisite.
+- Peyvast Auth 1.0.1 is a single-site plugin. WordPress Multisite is explicitly unsupported and activation is rejected on Multisite.
 - Action Scheduler APIs are used only after `action_scheduler_init`. Activation creates/verifies schema and persists rebuild state, but does not enqueue actions before scheduler initialization.
 - The phone identity index has separate schema/runtime states: `schema_missing`, `schema_invalid`, `index_building`, `index_ready`, `index_failed`, and `scheduler_unavailable`.
 - Phone identity rebuild is background-only and uses bounded keyset pagination on `wp_usermeta.umeta_id`; it does not use OFFSET pagination or per-batch full `COUNT(*)` scans.
 - Primary and configured legacy phone rebuilds select the authoritative first meta row per user and process each batch in a bounded transaction. This prevents stale rebuild writes from racing concurrent user-meta changes.
 - Authentication does not rebuild or scan the phone index. During an index rebuild, phone-shaped usernames remain a bounded fallback; normal indexed phone resolution uses the dedicated identity table.
-- OTP provider delivery remains asynchronous. `send-otp` confirms queue persistence (`queued`/`retrying`), while the frontend polls `delivery-status` with bounded exponential backoff and challenge-aware cancellation.
+- Initial OTP provider delivery is synchronous: `send-otp` returns only after the attempt settles, so the user-visible latency is application processing plus provider latency, with no queue dispatch delay. `delivery-status` and its bounded polling remain available for transactions queued by versions before 1.0.1; the frontend only polls when a response reports `queued`/`retrying`.
 - Dual phone OTP delivery exposes channel presence but never exposes the server-derived account email address. Server-derived email destinations are masked by the presentation layer.

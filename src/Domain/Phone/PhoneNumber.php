@@ -168,8 +168,7 @@ final class PhoneNumber {
 		return substr( $this->local(), 0, 4 ) . '••••' . substr( $this->local(), -3 ); }
 
 	private static function numbering_pattern( string $pattern ): string {
-		// Country data stores the body of the numbering plan only. Anchors belong
-		// to the parser so international and national matching use one contract.
+		// Country data holds only the numbering-plan body; anchors belong to the parser.
 		$pattern = trim( $pattern );
 		$pattern = preg_replace( '/^\^/', '', $pattern ) ?? $pattern;
 		$pattern = preg_replace( '/\$$/', '', $pattern ) ?? $pattern;
@@ -184,12 +183,12 @@ final class PhoneNumber {
 		return $value === '' ? null : $value;
 	}
 	private static function presentation_digits( string $value ): string {
-		// Script conversion is unconditional: presentation and identity parsing agree.
+		// Presentation and identity parsing must agree on script conversion.
 		return strtr( $value, self::digit_map() );
 	}
 
 	private static function digits_for_identity( string $value ): string {
-		// Always accept Persian/Arabic numerals; conversion is a hard invariant.
+		// Persian/Arabic numerals are always accepted.
 		return strtr( $value, self::digit_map() );
 	}
 

@@ -5,7 +5,13 @@ use Peyvast\Auth\Infrastructure\Logging\Logger;
 
 defined( 'ABSPATH' ) || exit;
 
-/** Encrypted-at-rest queue for OTP codes awaiting asynchronous provider delivery. */
+/**
+ * Encrypted-at-rest delivery staging store for OTP codes.
+ *
+ * 1.0.1 stages the code and recipients here and delivers them inside the
+ * same request; the table also remains the queue for OTP delivery actions
+ * created by earlier versions.
+ */
 final class OtpDeliveryStore {
 
 	private const KEY_CONTEXT       = 'peyvast-auth:otp-delivery:v1';
@@ -17,17 +23,23 @@ final class OtpDeliveryStore {
 
 	public static function available(): bool {
 		global $wpdb;
-		static $available = null;
-		if ( $available !== null ) {
-			return $available;
+		// Only a positive probe is memoized: the schema can be repaired later in the same request.
+		static $table_present = false;
+		if ( $table_present ) {
+			return true;
 		}
-		// The queue is supported on MySQL/MariaDB production installations;
-		// non-MySQL environments are development-only and are not a production promise.
-		$available = (bool) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', self::table() ) );
-		return $available;
+		$table_present = (bool) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', self::table() ) );
+		return $table_present;
 	}
 
-	/** Encrypt and persist the code and recipients; null keeps the sync path. */
+	/**
+	 * Encrypt and persist the code and recipients as the delivery staging record.
+	 *
+	 * A null result means the staging record could not be created (the table or
+	 * OpenSSL is unavailable, encryption failed, or the write failed). The
+	 * caller must treat that as a hard failure and must not invoke a provider:
+	 * the staging record is the delivery input for the synchronous path.
+	 */
 	public static function store( string $challenge_id, string $otp, array $channels = array() ) {
 		if ( $challenge_id === '' || $otp === '' || ! $channels || ! self::available() || ! function_exists( 'openssl_encrypt' ) ) {
 			return null;

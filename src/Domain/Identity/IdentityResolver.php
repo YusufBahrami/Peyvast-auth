@@ -27,8 +27,7 @@ final class IdentityResolver {
 		}
 		$primary_ready = PhoneIdentityIndex::primary_ready();
 		if ( ! $primary_ready ) {
-			// Do not turn an index rebuild into an authentication-time table scan.
-			// A phone-shaped username remains a bounded, indexed WordPress lookup.
+			// A phone-shaped username is a bounded lookup; never scan the table during a rebuild.
 			$candidate_ids = array();
 			foreach ( $this->login_formats( $phone ) as $login ) {
 				$user = get_user_by( 'login', $login );

@@ -45,10 +45,8 @@ final class Scheduler {
 
 		self::register_handlers();
 
-		// Action Scheduler is safe to use only after its data store initializes
-		// (`init` priority 1, surfaced via `action_scheduler_init`). Recurring
-		// maintenance is ensured there on every request, which also recovers
-		// missing jobs without ever creating duplicates.
+		// Action Scheduler is safe only after its data store initializes (`action_scheduler_init`).
+		// Recurring maintenance is ensured there on every request, recovering missing jobs.
 		add_action( 'action_scheduler_init', array( self::class, 'ensure_recurring_trigger' ), 15 );
 		add_action( 'action_scheduler_init', array( self::class, 'ensure_recurring_actions' ), 20 );
 		add_action( 'action_scheduler_init', array( self::class, 'ensure_index_rebuild' ), 21 );

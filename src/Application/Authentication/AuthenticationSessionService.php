@@ -32,9 +32,7 @@ final class AuthenticationSessionService {
 		wp_set_current_user( $user->ID );
 		wp_set_auth_cookie( $user->ID, $remember, is_ssl() );
 		if ( class_exists( GuestSession::class ) ) GuestSession::rotate();
-		// Lazy migration is auxiliary and must never delay or fail the login
-		// response; it is queued as a unique async Action Scheduler job per user
-		// and runs outside the authentication request.
+		// Lazy migration is auxiliary: queued per user so it can never delay the login.
 		if ( Settings::get( 'migration.lazy_enabled', false ) ) {
 			if ( Scheduler::schedule_async( Scheduler::HOOK_LAZY_PHONE_MIGRATION, array( (int) $user->ID ), true ) <= 0 ) {
 				Logger::warning( 'migration', 'lazy_migration_schedule_failed', 'Lazy phone migration could not be queued; authentication was not blocked.', array(), (int) $user->ID );

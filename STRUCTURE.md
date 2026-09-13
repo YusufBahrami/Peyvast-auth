@@ -1,5 +1,7 @@
 # Repository Structure
 
+> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
+
 ## Runtime
 
 - `peyvast-auth.php`: plugin metadata, constants, Action Scheduler bootstrap loading, autoloader, lifecycle hooks, and boot entry point.
@@ -8,8 +10,8 @@
 - `src/Core`: lifecycle, compatibility, and settings.
 - `src/Domain`: phone, identity, OTP, authentication policy, and security rules.
 - `src/Application`: OTP, password, registration, authentication sessions, and phone migration use cases.
-- `src/Infrastructure/Persistence`: custom-table stores (including the encrypted OTP delivery queue), named database locks, and the identity index.
-- `src/Infrastructure/Scheduling`: centralized Action Scheduler ownership (hooks, recurring-job lifecycle, unique scheduling) and the async OTP delivery handler.
+- `src/Infrastructure/Persistence`: custom-table stores (including the encrypted OTP delivery staging store), named database locks, and the identity index.
+- `src/Infrastructure/Scheduling`: centralized Action Scheduler ownership (hooks, recurring-job lifecycle, unique scheduling) and the OTP delivery handler (synchronous request delivery plus the queued path for transactions created before 1.0.1).
 - `src/Infrastructure/Providers`: WordPress HTML email plus supported SMS adapters; the email adapter preserves complete custom HTML documents and derives wrapper locale/direction from WordPress when a fragment needs a document shell.
 - `src/Infrastructure/WordPress`: installer, guest session, privacy, redirects, and migration notices.
 - `src/Infrastructure/Logging`: redacted operational logging with stable error categories.
@@ -36,28 +38,15 @@
 
 `languages/` contains the POT template, Persian PO/MO catalog, and WordPress JavaScript JSON catalogs. Runtime source strings use `peyvast-auth`; locale assets are the only intended source of Persian text.
 
-## Testing
-
-`tests/` contains an integration suite that runs against a local WordPress Studio site via the Studio-wrapped WP-CLI (`studio wp eval-file`, see `tests/run-tests.sh`):
-
-- `test-bootstrap.php`: Action Scheduler bootstrap, version arbitration, recurring-ensure usage, coexistence checks, and regression coverage for keyed identifiers, redirect validation, guest nonce isolation, JWKS cache retention, migration locking, and fixed-window thresholds.
-- `test-scheduler.php`: recurring scheduling, duplicate prevention, missing-job recovery and deactivation cleanup.
-- `test-cleanup.php`: OTP challenge, log retention, and security-state purge semantics.
-- `test-delivery.php`: encrypted delivery queue, challenge-state guards, retry backoff, idempotency, and per-channel retry after partial delivery.
-- `test-migration.php`: chained migration and identity-index rebuild batches, idempotency, and interrupted-chain recovery.
-- `test-flows.php`: enumeration-neutral responses for unknown identifiers and token-state invariants when registration or password updates fail.
-- `test-migration-ui.js`: deterministic Node.js tests for migration notice state mapping and user-facing failure-message safety.
-- `helpers.php`: shared assertion helpers.
-
 ## Documentation
 
 - `README.md`: user-facing installation and behavior reference.
 - `ARCHITECTURE.md`: component and flow reference, including the scheduling layer.
 - `STRUCTURE.md`: this map.
+- `document.md`: current technical documentation of the shipped behavior.
+- `SECURITY.md`: security policy, design, and private vulnerability reporting guidance.
 - `changelog.txt`: version history and distribution release notes.
 - `readme.txt`: WordPress.org plugin readme with changelog and upgrade notices.
-- `SECURITY.md`: supported versions and private vulnerability reporting guidance.
-- `CONTRIBUTING.md`: contribution rules.
 
 ## Release contents
 

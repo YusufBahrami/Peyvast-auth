@@ -78,8 +78,7 @@
     return String(template).replace("%1$d", String(conflicts)).replace("%2$d", String(failures));
   }
 
-  // Kept as a small, dependency-free presentation API so the real state mapping
-  // can be tested without a browser or a DOM implementation.
+  // Dependency-free presentation API so the state mapping stays testable without a DOM.
   window.PEYVAST_AUTH_MIGRATION_UI = Object.freeze({ statusClass, resultClass, migrationText });
 
   const ANIMATION_MS = 160;
@@ -186,8 +185,7 @@
       pollTimer = 0;
     }
 
-    // Reset presentation immediately. The server reset is authoritative, but
-    // the UI must never wait for REST or Action Scheduler latency.
+    // Reset presentation immediately; the server reset is authoritative but must not be awaited.
     renderStatus({ status: 'idle', has_notice: false }, root);
 
     try {
@@ -244,8 +242,7 @@
     if (initialized) return;
     initialized = true;
 
-    // Delegate from document instead of a tab panel. Settings tabs may be
-    // hidden, detached, or re-rendered without a full page reload.
+    // Delegate from document: settings tab panels may be hidden or re-rendered without a reload.
     document.addEventListener('click', (event) => {
       const target = event.target?.closest?.('[data-peyvast-auth-migrate-user], [data-peyvast-auth-migration-close]');
       if (!target) return;

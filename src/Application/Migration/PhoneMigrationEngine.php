@@ -131,9 +131,7 @@ final class PhoneMigrationEngine {
 			return array( 'ready' => false, 'conflict' => false );
 		}
 
-		// A ready index is authoritative for indexed phone identities. Do not
-		// load/resolve every candidate through WP_User when the index already
-		// tells us another owner exists.
+		// A ready index is authoritative, so do not re-resolve every candidate through WP_User.
 		$indexed_ids = PhoneIdentityIndex::candidate_user_ids( PhoneNumber::hash_value( $canonical ), $sources );
 		foreach ( $indexed_ids as $candidate_id ) {
 			if ( (int) $candidate_id > 0 && (int) $candidate_id !== $user_id ) {

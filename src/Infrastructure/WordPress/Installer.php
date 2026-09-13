@@ -39,7 +39,7 @@ final class Installer {
 		add_action(
 			'admin_notices',
 			static function () {
-				echo '<div class="notice notice-warning"><p>' . esc_html__( 'Peyvast Auth is running on SQLite (WordPress Studio compatibility layer). MySQL or MariaDB is required for production; authentication delivery requires the encrypted Action Scheduler queue.', 'peyvast-auth' ) . '</p></div>';
+				echo '<div class="notice notice-warning"><p>' . esc_html__( 'Peyvast Auth is running on SQLite (WordPress Studio compatibility layer). MySQL or MariaDB is required for production; authentication delivery requires the encrypted OTP delivery store.', 'peyvast-auth' ) . '</p></div>';
 			}
 		);
 	}
@@ -47,7 +47,13 @@ final class Installer {
 	public static function activate( bool $network_wide = false ): void {
 		if ( is_multisite() || $network_wide ) {
 			wp_die(
-				esc_html__( 'Peyvast Auth 1.0.0 does not support WordPress Multisite. Activate it only on a single-site WordPress installation.', 'peyvast-auth' ),
+				esc_html(
+					sprintf(
+						/* translators: %s: plugin version. */
+						__( 'Peyvast Auth %s does not support WordPress Multisite. Activate it only on a single-site WordPress installation.', 'peyvast-auth' ),
+						PEYVAST_AUTH_VERSION
+					)
+				),
 				esc_html__( 'Peyvast Auth activation not supported', 'peyvast-auth' ),
 				array( 'response' => 500 )
 			);
@@ -64,9 +70,8 @@ final class Installer {
 		if ( ! get_option( 'peyvast_auth_identifier_key' ) ) {
 			add_option( 'peyvast_auth_identifier_key', wp_generate_password( 64, true, true ), '', false );
 		}
-		// Activation may run before Action Scheduler has initialized. Persist only the
-		// rebuild state here; Scheduler::boot() will enqueue work from
-		// action_scheduler_init.
+		// Activation may run before Action Scheduler initializes: persist the rebuild state
+		// here and let Scheduler::boot() enqueue from action_scheduler_init.
 		update_option( self::HEALTH_OPTION, array( 'status' => 'ready', 'checked_at' => time() ), false );
 		\Peyvast\Auth\Infrastructure\Persistence\PhoneIdentityIndex::mark_rebuild( false );
 	}
@@ -134,7 +139,6 @@ final class Installer {
 	}
 
 	public static function deactivate(): void {
-		// Cancel every Peyvast Auth-owned Action Scheduler action.
 		// Plugin data is never deleted on deactivation.
 		Scheduler::deactivate();
 	}

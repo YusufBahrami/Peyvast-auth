@@ -46,7 +46,7 @@ final class RegistrationService {
 				return $identity_error;
 			}
 
-			// Re-submit after an account was already resolved: complete login.
+			// An already-resolved account continues as a login.
 			if ( $resolution->is_existing() ) {
 				$row = $this->begin_phone_token( $verification_token, $canonical, (int) $resolution->user()->ID );
 				if ( ! $row || is_wp_error( $row ) ) return self::invalid_token();
@@ -59,7 +59,6 @@ final class RegistrationService {
 			}
 
 			$fields             = Settings::get( 'registration.fields', array() );
-			// Persist only enabled fields.
 			$first_name_enabled = ! empty( $fields['first_name']['enabled'] );
 			$last_name_enabled  = ! empty( $fields['last_name']['enabled'] );
 			$first_name         = $first_name_enabled ? sanitize_text_field( $data['first_name'] ?? '' ) : '';
@@ -174,9 +173,7 @@ final class RegistrationService {
 
 			$claimed = $this->begin_phone_token( $verification_token, $canonical, 0 );
 			if ( ! $claimed || is_wp_error( $claimed ) ) return self::invalid_token();
-			// The verified token stays in the recoverable processing state until
-			// every registration-dependent write (user, meta, index, WooCommerce
-			// sync, session) has completed.
+			// Token stays in processing until user, meta, index, WooCommerce sync and session all succeed.
 			$claimed_token_id = (int) $claimed->id;
 
 			$display_name = trim( $first_name . ' ' . $last_name );
@@ -197,7 +194,6 @@ final class RegistrationService {
 				return $user_id;
 			}
 
-			// Store the coupled primary identity and verify every persistence result.
 			$stored = PhoneNumber::peyvast_value( $canonical );
 			$hash   = PhoneNumber::hash_value( $canonical );
 			$meta_ok_1 = update_user_meta( $user_id, '_peyvast_auth_phone', $stored );
@@ -218,12 +214,11 @@ final class RegistrationService {
 			}
 			$login = $this->session->login( $user, false, 'registration' );
 			if ( is_wp_error( $login ) ) {
-			// A policy veto after creation must roll back the committed account.
+				// A policy veto after creation rolls back the committed account.
 				$this->rollback_created_user( (int) $user_id, $claimed_token_id );
 				return $login;
 			}
-			// Boundary: account and session exist. Finalize the token last; a
-			// finalization failure must never delete the account or the login.
+			// Account and session exist: finalize last; failure here must not delete them.
 			if ( ! $this->challenges->finish_verified_token_processing( $claimed_token_id ) ) {
 				Logger::error( 'auth', 'registration_token_finalize_failed', 'Account created but the registration token could not be finalized; the challenge expires and is purged automatically.', array( 'recovery' => true, 'challenge_id' => substr( (string) $claimed->challenge_id, 0, 8 ) ), (int) $user_id );
 			}
@@ -251,7 +246,7 @@ final class RegistrationService {
 	}
 
 	private static function default_role(): string {
-		// The default role is owned by WordPress/WooCommerce, not this plugin.
+		// The default role belongs to WordPress/WooCommerce.
 		$default = sanitize_key( (string) get_option( 'default_role', 'subscriber' ) );
 		return get_role( $default ) ? $default : 'subscriber';
 	}

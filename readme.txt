@@ -5,7 +5,7 @@ WordPress: 6.8+
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,13 +39,13 @@ Peyvast Auth brings modern, phone-first authentication to WordPress. Visitors si
 * Guest nonce identities use a negative namespace, and guest challenges are bound to an HttpOnly, SameSite cookie
 * Server-side rate limiting with IP, network, and identifier buckets, threshold-correct fixed-window enforcement, and progressive blocking
 * Enumeration-neutral responses: unknown email logins and unknown reset identifiers return a success-shaped response with nothing stored or sent
-* All configured delivery channels are mandatory; failed channels are retried independently and never silently skipped
+* Initial OTP delivery happens inside the request and all configured delivery channels are mandatory: the OTP stage appears only after every configured channel accepted the code, and a failed send returns a real error instead of a queued action
 * Redirect page IDs are validated against published/private pages and custom URLs are restricted to the local site
 * Google key refreshes preserve an existing JWKS cache when the upstream endpoint is unavailable
 * Provider credentials are sanitized, never sent in request URLs, never returned in API responses, and redacted from diagnostics; delivery encryption keys derive from the WordPress deployment secrets, not the database
 * Privacy export and erasure for phone data, aligned with WordPress privacy tools
 
-Activation creates five dedicated InnoDB tables for OTP challenges, the phone identity index, operational logs, security state, and the encrypted OTP delivery queue. Operational logs redact sensitive values and support retention cleanup. Background maintenance (challenge/log/security-state cleanup, schema watchdog, phone migration, and identity-index rebuild) runs on the bundled Action Scheduler, which coexists with WooCommerce and other plugins that provide Action Scheduler. Data removal on uninstall is conditional on the "delete data on uninstall" setting and includes migration cancellation state. Production deployments should use MySQL or MariaDB; WordPress Studio's SQLite compatibility layer is intended for local development.
+Activation creates five dedicated InnoDB tables for OTP challenges, the phone identity index, operational logs, security state, and the encrypted OTP delivery store. Initial OTP provider delivery is attempted synchronously during the authentication request — the code is encrypted at rest while it is staged and is deleted once the attempt settles — so no queue latency or frontend polling is involved in the normal send path. Operational logs redact sensitive values and support retention cleanup. Background maintenance (challenge/log/security-state cleanup, schema watchdog, phone migration, and identity-index rebuild) still runs on the bundled Action Scheduler, which coexists with WooCommerce and other plugins that provide Action Scheduler, and any OTP delivery action queued by a version before 1.0.1 is drained safely. Data removal on uninstall is conditional on the "delete data on uninstall" setting and includes migration cancellation state. Production deployments should use MySQL or MariaDB; WordPress Studio's SQLite compatibility layer is intended for local development.
 
 == Installation ==
 
@@ -76,14 +76,27 @@ All existing WordPress sessions are revoked and the user must sign in again. The
 
 = Where is my data stored? =
 
-Settings and operational keys live under the `peyvast_auth_` namespace. Five custom tables store OTP challenges, the phone identity index, redacted operational logs, security state, and the encrypted OTP delivery queue. Uninstall cleanup is conditional on the administrator's "delete data on uninstall" setting.
+Settings and operational keys live under the `peyvast_auth_` namespace. Five custom tables store OTP challenges, the phone identity index, redacted operational logs, security state, and the encrypted OTP delivery store. Uninstall cleanup is conditional on the administrator's "delete data on uninstall" setting.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+OTP delivery is now performed inside the send-otp request, so the verification-code stage appears only after the configured channels actually accepted the code; a queued background action is never reported as a sent code. A failed initial delivery returns a real error and invalidates the challenge instead of leaving a code that could arrive later, and new requests no longer create Action Scheduler delivery jobs. Action Scheduler still runs maintenance, cleanup, watchdogs, phone migration, the identity-index rebuild, and any OTP delivery action queued by an earlier version. The default SMS provider timeout is now 10 seconds (was 15) because the request waits for the provider; saved settings keep their configured value. WordPress 6.8+ and PHP 8.1+ are required.
 
 = 1.0.0 =
 First release. Background work runs on the bundled Action Scheduler: OTP delivery is asynchronous and encrypted at rest, recurring maintenance is batch-limited, and the phone migration and identity-index rebuild are chained jobs with retries and recovery. Registration and password reset finalize their verification tokens only after every coupled write succeeds, all configured delivery channels are mandatory with per-channel retries, and unknown accounts receive enumeration-neutral responses. REST routes have argument schemas and nonce/origin permission callbacks, provider credentials are never placed in URLs or logs, and delivery encryption keys derive from the WordPress deployment secrets. Identifier hashes are site-keyed, guest nonces use a separate namespace, redirect page settings are validated, and migration state locking is serialized. WordPress 6.8+ and PHP 8.1+ are required. Production deployments should use MySQL or MariaDB.
 
 == Changelog ==
+
+= 1.0.1 =
+* Changed: initial OTP delivery is attempted synchronously inside the send-otp request, so the verification-code stage is shown only after the configured SMS/email channels accepted the code
+* Changed: the normal send path no longer depends on Action Scheduler dispatch latency or on frontend delivery-status polling; the delivery-status endpoint and its bounded polling remain for OTP transactions created by earlier versions
+* Changed: the authentication area shows one notice at a time — each new message replaces the previous one, so a sequence of actions no longer stacks notices; WordPress and other plugins' notices are untouched
+* Changed: the default SMS provider timeout is now 10 seconds (still configurable from 5 to 60) because the request waits for the provider
+* Fixed: a queued background job was reported as successful OTP delivery, so the verification-code stage could open before the code had been sent; a failed delivery now returns a real error and keeps the user on the identifier or password-reset stage
+* Fixed: a failed delivery could leave a valid challenge behind after its staged delivery payload had already been discarded, and the delivery-status and resend paths then read that challenge as a completed delivery; the challenge is now invalidated and the payload is discarded only once the database confirms the challenge can no longer be used
+* Fixed: the delivery-status check could report a live challenge with no staged delivery payload as delivered instead of reporting its real state
+* Fixed: phone identity index readiness could stay false for the remainder of a request after the database schema had already been repaired
 
 = 1.0.0 =
 * Action Scheduler integration with bundled 4.1.0 bootstrap and multi-plugin version arbitration

@@ -1,8 +1,10 @@
 # Security Policy
 
+> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
+
 ## Supported release
 
-The current plugin version is 1.0.0.
+The current plugin version is 1.0.1.
 
 ## Security design
 
@@ -10,7 +12,7 @@ Peyvast Auth treats browser requests as untrusted. State-changing REST requests 
 
 Server-side security state applies limits by relevant scope and dimensions such as IP, network, identifier, and IP/identifier combination. Fixed-window enforcement rejects requests at the configured limit, while password failures are handled with generic responses. Unknown email OTP logins and unknown password-reset identifiers receive success-shaped neutral responses — same status, cooldown, and expiry shape, with nothing stored or delivered — so account existence cannot be inferred from the API; rate limits still apply identically to probing attempts. Login page settings accept only published or private pages, and custom redirects are restricted to the local site. Provider credentials and sensitive response fields are excluded from safe REST success payloads, credentials are never placed in request URLs, provider diagnostics redact credentials and raw response bodies, and operational logs use stable error categories rather than raw database error text.
 
-OTP provider delivery is asynchronous: the plaintext code is never placed in Action Scheduler arguments, logs, or API responses. It is encrypted at rest (AES-256-GCM) in the dedicated delivery table. The encryption key is derived from the WordPress deployment secrets via `wp_salt('auth')` — never from a database-stored option — so a database dump alone cannot decrypt queued codes. Each background job re-validates the challenge immediately before sending, so an invalidated, replaced, expired, or consumed challenge can never be delivered. All configured channels are mandatory: only failed channels are retried (the queued payload is rewritten to the remaining channels), and on permanent failure of a channel the challenge is invalidated so a session can never be restored from an undelivered code. There is no synchronous provider fallback; queue failure fails fast before provider HTTP work.
+OTP provider delivery happens inside the authentication request in 1.0.1: the plaintext code is never placed in Action Scheduler arguments, logs, or API responses. It is held only in the request scope and in an AES-256-GCM encrypted delivery staging row (the delivery table also remains the queue for transactions created by earlier versions). The encryption key is derived from the WordPress deployment secrets via `wp_salt('auth')` — never from a database-stored option — so a database dump alone cannot decrypt staged or queued codes. The challenge is re-validated under its lifecycle lock immediately before sending, so an invalidated, replaced, expired, or consumed challenge can never be delivered. All configured channels are mandatory: the request succeeds only when every configured channel accepted the code, and a failed attempt invalidates the challenge and discards the staged payload only once the database confirms the challenge can no longer be used (the payload is retained otherwise), so a session can never be restored from an undelivered code, a usable challenge is never left without delivery evidence, and no failed code can be retried into an unexpected late delivery. Failure to persist the encrypted staging row fails fast before any provider HTTP work.
 
 ## Deployment requirements
 

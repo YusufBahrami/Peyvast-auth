@@ -34,8 +34,7 @@ final class PhoneMigrationService {
 				return $existing;
 			}
 
-			// A dismissal tombstone belongs to the previous job only. Clear it
-			// before creating a fresh job so an old worker can never cancel a new run.
+			// Clear the previous job's dismissal tombstone so an old worker cannot cancel this run.
 			delete_option( self::CANCEL_KEY );
 			$source = PhoneMigrationSourceResolver::snapshot();
 			if ( ( $source['legacy_type'] ?? '' ) === 'user_meta' && empty( $source['legacy_key'] ) ) {
@@ -85,8 +84,7 @@ final class PhoneMigrationService {
 			return; // Canceled, replaced or already completed.
 		}
 		if ( ! self::acquire_lock() ) {
-			// Another worker holds the lock; retry with backoff, but stop after
-			// MAX_RETRIES and let the recurring watchdog recover the chain.
+			// Lock held elsewhere: retry with backoff, then let the watchdog recover the chain.
 			if ( $attempt < self::MAX_RETRIES ) {
 				if ( ! self::schedule_retry( $job['id'], $attempt + 1, self::backoff( $attempt ) ) ) {
 				$job['status'] = 'failed'; $job['error'] = 'retry_schedule_failed'; $job['lock_until'] = 0; self::save( $job );
@@ -136,9 +134,7 @@ final class PhoneMigrationService {
 			$job['updated_at'] = time();
 			$job['lock_until'] = time() + 300;
 			self::save( $job );
-			// Continue only while more work remains. The next action is not
-			// unique so it can never be suppressed by the running instance;
-			// duplicate workers are prevented by the database lock instead.
+			// Deliberately not unique: duplicates are prevented by the database lock, not the scheduler.
 			if ( Scheduler::schedule_single( Scheduler::HOOK_PHONE_MIGRATION_BATCH, array( $job['id'], 0 ), 1, false ) <= 0 ) {
 				$job['status'] = 'failed'; $job['error'] = 'continuation_schedule_failed'; $job['lock_until'] = 0; $job['updated_at'] = time();
 				self::save( $job ); MigrationNoticeStore::mark( 'default', array( 'status' => 'failed', 'updated_at' => time(), 'job_id' => $job['id'] ) ); return;
@@ -155,7 +151,6 @@ final class PhoneMigrationService {
 			if ( self::is_cancelled( $job['id'] ) ) {
 				return;
 			}
-			// Transient failure: retry with exponential backoff up to MAX_RETRIES.
 			if ( $attempt < self::MAX_RETRIES ) {
 				$job['status']     = 'running';
 				$job['updated_at'] = time();
@@ -260,9 +255,7 @@ final class PhoneMigrationService {
 			$job = self::get_status();
 		$job_id = (string) ( $job['id'] ?? '' );
 
-		// Write a tombstone before deleting the job. A worker that already loaded
-		// the old job can therefore finish its current PHP request without
-		// recreating the deleted state or notice.
+		// Tombstone first, so a worker already holding the old job cannot recreate it.
 		if ( $job_id !== '' ) {
 			update_option( self::CANCEL_KEY, $job_id, false );
 		}
@@ -356,9 +349,7 @@ final class PhoneMigrationService {
 		$current_id = is_array( $current ) ? (string) ( $current['id'] ?? '' ) : '';
 		$job_id = (string) ( $job['id'] ?? '' );
 
-		// A worker from a dismissed job must never overwrite a newer job that
-		// was started after Close. This closes the delete/recreate race between
-		// Action Scheduler and the admin UI.
+		// A dismissed job's worker must never overwrite a newer job (Close/recreate race).
 		if ( $current_id !== '' && $job_id !== '' && $current_id !== $job_id ) {
 			return;
 		}
@@ -379,9 +370,7 @@ final class PhoneMigrationService {
 	}
 
 	private static function acquire_lock(): bool {
-		// Serialize the complete get/delete/add sequence. add_option() is atomic,
-		// but deleting an expired option before add_option() is not atomic without
-		// a lock covering both operations.
+		// add_option() is atomic, but deleting an expired option before it is not.
 		if ( self::$state_lock !== null ) {
 			return false;
 		}

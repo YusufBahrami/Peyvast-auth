@@ -30,9 +30,7 @@ final class Plugin {
 		\Peyvast\Auth\Infrastructure\WordPress\Installer::register_notices();
 		GuestSession::boot();
 		PhoneIdentityIndex::boot();
-		// All background work is owned by the Scheduler layer: recurring
-		// maintenance, chained migration/rebuild batches, async provider
-		// delivery and lazy migration. No WP-Cron jobs are registered here.
+		// The Scheduler layer owns all background work; no WP-Cron jobs are registered here.
 		Scheduler::boot();
 		Privacy::boot();
 		Settings::boot();

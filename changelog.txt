@@ -1,6 +1,20 @@
 Peyvast Auth Changelog
 ======================
 
+1.0.1
+---------------------------------
+
+Changed
+- Initial OTP delivery is attempted synchronously through the configured SMS/email providers inside the send-otp request, so the verification-code stage is shown only after the configured channels accepted the code. The default SMS provider timeout was lowered from 15 to 10 seconds because the request now waits for the provider; the existing setting still accepts 5-60 seconds.
+- The normal send path no longer depends on Action Scheduler dispatch latency or on frontend delivery-status polling. The delivery-status endpoint and its bounded polling remain available for OTP transactions created by earlier versions, and Action Scheduler continues to own migration, maintenance, cleanup, watchdogs and the phone identity-index rebuild.
+- The authentication area shows one notice at a time: each new message replaces the previous one, so a sequence of actions can no longer stack several notices together. Notices from WordPress and other plugins are left untouched.
+
+Fixed
+- A queued background delivery job was reported to the user as successful OTP delivery: the request returned success and the verification-code stage opened before the code had been sent. A failed delivery now returns a real error and the user stays on the identifier or password-reset stage.
+- A failed delivery could leave a valid challenge behind after its staged delivery payload had already been discarded, and the delivery-status and resend paths then read that challenge as a completed delivery. Delivery failure now invalidates the challenge, and the staged payload is discarded only once the database confirms the challenge can no longer be used.
+- The delivery-status check could report a live challenge with no staged delivery payload as delivered instead of reporting its real state.
+- Phone identity index readiness could stay false for the remainder of a request after the database schema had already been repaired, blocking phone identity operations that could otherwise proceed.
+
 1.0.0
 ---------------------------------
 First release.

@@ -18,7 +18,7 @@ final class IpPanelUsernamePassword implements ProviderInterface {
 			return new ProviderResult( false, $this->id(), 'Not configured' );
 		}
 		$phone           = PhoneNumber::storage_value( PhoneNumber::canonical_value( $recipient ), 'country_code' );
-		$timeout         = (int) Settings::get( 'providers.sms.timeout', 15 );
+		$timeout         = (int) Settings::get( 'providers.sms.timeout', 10 );
 		$request_method  = '';
 		$request_url     = '';
 		$request_payload = null;
