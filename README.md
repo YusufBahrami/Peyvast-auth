@@ -1,7 +1,5 @@
 # Peyvast Auth
 
-> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
-
 Peyvast Auth is a WordPress authentication plugin with phone and email OTP login, password authentication, registration, password recovery, optional Google Sign-In, Iranian SMS and WordPress email providers, and integrations for WooCommerce, Bricks, and Blocks.
 
 ## What the plugin does
