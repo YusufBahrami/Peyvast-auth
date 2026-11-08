@@ -1,6 +1,33 @@
 Peyvast Auth Changelog
 ======================
 
+1.0.2
+---------------------------------
+
+Fixed
+- Bricks current-user dynamic tags are resolved through both the single-tag renderer and content-rendering filters, covering elements that render full content strings.
+- Centralized tag value resolution and restricted replacement to the four registered tag names, leaving unrelated Bricks dynamic tags untouched.
+- Bricks authentication text controls now resolve supported dynamic data consistently across titles, descriptions, labels, placeholders, button text, and information content.
+- The reset-request action now uses its own text and icon controls in both Bricks and Blocks, preserving the existing forgot-link text setting.
+- Bricks and Blocks back buttons follow the last visited authentication stage; the initial stage returns through browser history to the previous page.
+- Bricks icon-dependent options now follow the selected icon control, with native SVG size/color controls and all groups retained in the Content tab.
+- Blocks render selected SVG media safely and preserve per-side spacing/border control values; editor settings are organized into focused native panels.
+- Back-button styling uses WordPress Block Supports rather than duplicate custom style controls.
+
+Changed
+- Declared the WordPress data package as a dependency of the Blocks editor script for its block-selection behavior.
+
+Removed tags
+peyvast_auth_user_email, peyvast_auth_user_display_name, peyvast_auth_user_id
+these tags already exist in bricksbuilder theme
+
+Updates
+Action schedule version from 4.1.0 to 4.2.0
+
+Documentation
+- Updated the README and technical document for version 1.0.2 and documented the Bricks dynamic tags.
+- Added `CONTROLLER_AUDIT.md` with the Bricks and Blocks editor control-to-renderer map.
+
 1.0.1
 ---------------------------------
 
@@ -30,7 +57,7 @@ New
 - Phone and email OTP authentication: send, verify, login, registration, and password recovery, with resend cooldowns, expiry, bounded attempts, and guest-session-bound challenges.
 - Password login with phone, email, or username resolution; optional Google sign-in with local ID-token verification.
 - SMS providers: Kavenegar, Melipayamak, MsgWay, Sms.ir, IPPanel (API key and username/password modes); email delivery through the built-in WordPress mail adapter.
-- Action Scheduler integration: bundled Action Scheduler (4.1.0) is loaded from lib/action-scheduler and participates in the official multi-plugin version arbitration, so Peyvast Auth coexists with WooCommerce or any other plugin that bundles Action Scheduler.
+- Action Scheduler integration: bundled Action Scheduler (4.2.0) is loaded from lib/action-scheduler and participates in the official multi-plugin version arbitration, so Peyvast Auth coexists with WooCommerce or any other plugin that bundles Action Scheduler.
 - Dedicated scheduling infrastructure layer (Infrastructure\Scheduling\Scheduler) with a stable namespaced action group (peyvast-auth), unique scheduling, missing-job recovery, and lifecycle management (activation/deactivation).
 - Asynchronous OTP provider delivery: authentication requests never wait for provider latency. The OTP is encrypted at rest in the {prefix}peyvast_auth_otp_deliveries table, never passed in plaintext to the scheduler, and a queued job re-validates the challenge before sending so it can never deliver an invalidated, replaced, expired, or consumed challenge. Delivery failures retry with exponential backoff and invalidate the challenge after the final attempt. When the queue is unavailable, delivery falls back to the synchronous path.
 - Recurring maintenance jobs (Action Scheduler): expired OTP challenge cleanup every 15 minutes, log retention cleanup daily, security-state cleanup daily, and a daily schema watchdog — all bounded, batch-limited, and index-backed.

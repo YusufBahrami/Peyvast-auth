@@ -1,10 +1,10 @@
 # Security Policy
 
-> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
+> **Document status:** Approved — Peyvast Auth 1.0.2 (2026-10-29).
 
 ## Supported release
 
-The current plugin version is 1.0.1.
+The current plugin version is 1.0.2.
 
 ## Security design
 

@@ -5,7 +5,7 @@ WordPress: 6.8+
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,7 +25,8 @@ Peyvast Auth brings modern, phone-first authentication to WordPress. Visitors si
 
 = Built for your stack =
 
-* Server-rendered Blocks and Bricks elements, plus a back-button block
+* Server-rendered Blocks and Bricks elements with editor controls and dynamic data support
+* Back buttons return to the previous authentication stage, or to the previous page from the initial stage
 * WooCommerce integration: customer phone synchronization, account/checkout/order-receipt redirects, and HPOS compatibility
 * Pluggable SMS and email provider adapters, configured under the Providers settings with a built-in test endpoint
 * Customizable HTML OTP email template with locale-aware document direction and no forced Persian/RTL markup
@@ -99,7 +100,7 @@ First release. Background work runs on the bundled Action Scheduler: OTP deliver
 * Fixed: phone identity index readiness could stay false for the remainder of a request after the database schema had already been repaired
 
 = 1.0.0 =
-* Action Scheduler integration with bundled 4.1.0 bootstrap and multi-plugin version arbitration
+* Action Scheduler integration with bundled 4.2.0 bootstrap and multi-plugin version arbitration
 * Asynchronous encrypted OTP provider delivery with challenge re-validation and bounded retries
 * Recurring maintenance: OTP challenge cleanup (15 min), log retention and security-state cleanup (daily), schema watchdog (daily)
 * Phone migration and identity-index rebuild as chained, idempotent, retryable background jobs with watchdog recovery

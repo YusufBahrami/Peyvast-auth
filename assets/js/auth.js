@@ -1236,15 +1236,19 @@
     }
 
     function back() {
-      const targets = {
-        register: "phone",
-        otp: "phone",
-        password: "phone",
-        forgot: "password",
-        reset: "forgot",
-      };
-      const target = targets[state.step] || "phone";
-      state.previous = [];
+      if (state.step === "phone") {
+        window.history.back();
+        return;
+      }
+      const currentHistoryState = window.history.state;
+      if (
+        ownsHistoryState(currentHistoryState) &&
+        currentHistoryState.stage === state.step
+      ) {
+        window.history.back();
+        return;
+      }
+      const target = state.previous.pop() || "phone";
       show(target, { pushHistory: false, focus: true, allowTransition: true });
     }
 
@@ -2316,6 +2320,10 @@
       if (!ownsHistoryState(event.state)) return;
       const stage = String(event.state.stage || "phone");
       if (!steps.some((step) => step.dataset.step === stage)) return;
+      const previousIndex = state.previous.lastIndexOf(stage);
+      if (previousIndex !== -1) {
+        state.previous = state.previous.slice(0, previousIndex);
+      }
       show(stage, { pushHistory: false, focus: true });
     });
 
