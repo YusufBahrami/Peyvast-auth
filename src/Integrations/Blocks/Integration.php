@@ -9,8 +9,7 @@ use Peyvast\Auth\Domain\Authentication\AuthenticationCapabilities;
 defined( 'ABSPATH' ) || exit;
 
 final class Integration {
-	private static array $icon_cache = array();
-	private static bool $booted      = false;
+	private static bool $booted = false;
 
 	public static function boot(): void {
 		if ( self::$booted ) {
@@ -32,7 +31,7 @@ final class Integration {
 	private static function register_assets(): void {
 		wp_register_style( 'peyvast-auth', PEYVAST_AUTH_URL . 'assets/css/auth.css', array(), PEYVAST_AUTH_VERSION );
 		wp_register_style( 'peyvast-auth-editor', PEYVAST_AUTH_URL . 'assets/css/blocks-editor.css', array( 'peyvast-auth' ), PEYVAST_AUTH_VERSION );
-		wp_register_script( 'peyvast-auth-blocks-editor', PEYVAST_AUTH_URL . 'blocks/editor.js', array( 'wp-blocks', 'wp-block-editor', 'wp-components', 'wp-element', 'wp-i18n', 'wp-server-side-render' ), (string) filemtime( PEYVAST_AUTH_DIR . 'blocks/editor.js' ), true );
+		wp_register_script( 'peyvast-auth-blocks-editor', PEYVAST_AUTH_URL . 'blocks/editor.js', array( 'wp-blocks', 'wp-block-editor', 'wp-components', 'wp-data', 'wp-element', 'wp-i18n', 'wp-server-side-render' ), (string) filemtime( PEYVAST_AUTH_DIR . 'blocks/editor.js' ), true );
 		if ( function_exists( 'wp_set_script_translations' ) ) {
 			wp_set_script_translations( 'peyvast-auth-blocks-editor', 'peyvast-auth', PEYVAST_AUTH_DIR . 'languages' );
 		}
@@ -177,6 +176,9 @@ final class Integration {
 
 	private static function css_dimension( $value ): string {
 		$value = self::css_scalar( $value );
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
 		if ( is_int( $value ) || is_float( $value ) ) {
 			return (float) $value === 0.0 ? '0' : rtrim( rtrim( number_format( (float) $value, 6, '.', '' ), '0' ), '.' ) . 'px';
 		}
@@ -255,21 +257,51 @@ final class Integration {
 			return;
 		}
 		$raw = is_object( $value ) ? get_object_vars( $value ) : $value;
-		if ( isset( $raw['top'] ) && ( is_array( $raw['top'] ) || is_object( $raw['top'] ) ) ) {
-			$side = is_object( $raw['top'] ) ? get_object_vars( $raw['top'] ) : $raw['top'];
-		} elseif ( isset( $raw['width'] ) || isset( $raw['style'] ) || isset( $raw['color'] ) ) {
-			$side = $raw;
-		} else {
-			return;
+		$has_sides = false;
+		foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side_name ) {
+			$has_sides = $has_sides || isset( $raw[ $side_name ] );
 		}
-		$parts = array(
-			'width' => self::css_dimension( $side['width'] ?? '' ),
-			'style' => self::css_atom( $side['style'] ?? '' ),
-			'color' => self::css_atom( $side['color'] ?? '' ),
-		);
-		foreach ( $parts as $part => $css ) {
-			if ( $css !== '' ) {
-				$vars[ '--peyvast-auth-' . $name . '-' . $part ] = $css;
+		$sides = array();
+		foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side_name ) {
+			$side = $has_sides ? ( $raw[ $side_name ] ?? array() ) : $raw;
+			$side = is_object( $side ) ? get_object_vars( $side ) : $side;
+			if ( ! is_array( $side ) || ( ! isset( $side['width'] ) && ! isset( $side['style'] ) && ! isset( $side['color'] ) ) ) {
+				continue;
+			}
+			$parts = array(
+				'width' => self::css_dimension( $side['width'] ?? '' ),
+				'style' => self::css_atom( $side['style'] ?? '' ),
+				'color' => self::css_atom( $side['color'] ?? '' ),
+			);
+			foreach ( $parts as $part => $css ) {
+				if ( $css !== '' ) {
+					$vars[ '--peyvast-auth-' . $name . '-' . $side_name . '-' . $part ] = $css;
+				}
+			}
+			$border = self::css_border( $side );
+			if ( $border !== '' ) {
+				$sides[ $side_name ] = $border;
+				$vars[ '--peyvast-auth-' . $name . '-' . $side_name ] = $border;
+			}
+		}
+		if ( isset( $raw['radius'] ) ) {
+			$radius = self::css_dimension( $raw['radius'] );
+			if ( $radius !== '' ) {
+				$vars[ '--peyvast-auth-' . $name . '-radius' ] = $radius;
+			}
+		}
+		if ( count( $sides ) === 4 && count( array_unique( $sides ) ) === 1 ) {
+			$first_side = is_array( $raw['top'] ?? null ) ? $raw['top'] : ( is_object( $raw['top'] ?? null ) ? get_object_vars( $raw['top'] ) : $raw['top'] ?? $raw );
+			foreach (
+				array(
+					'width' => self::css_dimension( is_array( $first_side ) ? ( $first_side['width'] ?? '' ) : '' ),
+					'style' => self::css_atom( is_array( $first_side ) ? ( $first_side['style'] ?? '' ) : '' ),
+					'color' => self::css_atom( is_array( $first_side ) ? ( $first_side['color'] ?? '' ) : '' ),
+				) as $part => $css
+			) {
+				if ( $css !== '' ) {
+					$vars[ '--peyvast-auth-' . $name . '-' . $part ] = $css;
+				}
 			}
 		}
 	}
@@ -284,7 +316,30 @@ final class Integration {
 			self::add_var( $vars, 'input-height', $attrs['form_input_height'], 'dimension' );
 		}
 		self::add_border_vars( $vars, 'inline-error-input-border', $attrs['inline_error_input_border'] ?? array() );
+		foreach ( array(
+			array( 'information-border', 'information_border' ),
+			array( 'input-border', 'form_input_border' ),
+			array( 'inline-error-border', 'inline_error_border' ),
+			array( 'secondary-border', 'secondary_border' ),
+			array( 'resend-border', 'resend_border' ),
+			array( 'notice-close-border', 'notice_close_border' ),
+		) as $item ) {
+			self::add_border_vars( $vars, $item[0], $attrs[ $item[1] ] ?? array() );
+		}
 		foreach ( array( array( 'stage-title-padding', 'stage_title_padding' ), array( 'stage-title-margin', 'stage_title_margin' ), array( 'stage-description-padding', 'stage_description_padding' ), array( 'stage-description-margin', 'stage_description_margin' ) ) as $item ) {
+			self::add_box_sides( $vars, $item[0], $attrs[ $item[1] ] ?? array() );
+		}
+		foreach ( array(
+			array( 'container-header-margin', 'container_header_margin' ),
+			array( 'container-content-margin', 'container_content_margin' ),
+			array( 'container-actions-margin', 'container_actions_margin' ),
+			array( 'information-padding', 'information_padding' ),
+			array( 'information-margin', 'information_margin' ),
+			array( 'form-label-margin', 'form_label_margin' ),
+			array( 'input-padding', 'form_input_padding' ),
+			array( 'inline-error-margin', 'inline_error_margin' ),
+			array( 'inline-error-padding', 'inline_error_padding' ),
+		) as $item ) {
 			self::add_box_sides( $vars, $item[0], $attrs[ $item[1] ] ?? array() );
 		}
 		foreach ( array( 'continue', 'verify', 'login', 'register', 'forgot', 'reset_password', 'secondary', 'resend' ) as $prefix ) {
@@ -294,7 +349,9 @@ final class Integration {
 				self::add_var( $vars, $css_prefix . '-' . $name, $attrs[ $key ] ?? '' ); }
 			self::add_var( $vars, $css_prefix . '-background', $attrs[ $prefix . '_background' ] ?? '' );
 			self::add_var( $vars, $css_prefix . '-padding', $attrs[ $prefix . '_padding' ] ?? '', 'box' );
+			self::add_box_sides( $vars, $css_prefix . '-padding', $attrs[ $prefix . '_padding' ] ?? array() );
 			self::add_var( $vars, $css_prefix . '-border', $attrs[ $prefix . '_border' ] ?? '', 'border' );
+			self::add_border_vars( $vars, $css_prefix . '-border', $attrs[ $prefix . '_border' ] ?? array() );
 			self::add_var( $vars, $css_prefix . '-icon-size', $attrs[ $prefix . '_icon_size' ] ?? '' );
 			self::add_var( $vars, $css_prefix . '-icon-color', $attrs[ $prefix . '_icon_color' ] ?? '' );
 			self::add_var( $vars, $css_prefix . '-icon-gap', $attrs[ $prefix . '_icon_gap' ] ?? '', 'dimension' );
@@ -302,11 +359,15 @@ final class Integration {
 		foreach ( array( 'success', 'error', 'warning', 'info' ) as $type ) {
 			self::add_var( $vars, 'notice-' . $type . '-background', $attrs[ 'notice_' . $type . '_background' ] ?? '' );
 			self::add_var( $vars, 'notice-' . $type . '-border', $attrs[ 'notice_' . $type . '_border' ] ?? '', 'border' );
+			self::add_border_vars( $vars, 'notice-' . $type . '-border', $attrs[ 'notice_' . $type . '_border' ] ?? array() );
 			self::add_var( $vars, 'notice-' . $type . '-padding', $attrs[ 'notice_' . $type . '_padding' ] ?? '', 'box' );
+			self::add_box_sides( $vars, 'notice-' . $type . '-padding', $attrs[ 'notice_' . $type . '_padding' ] ?? array() );
 			self::add_var( $vars, 'notice-' . $type . '-shadow', $attrs[ 'notice_' . $type . '_shadow' ] ?? '', 'shadow' ); }
 		self::add_var( $vars, 'notice-close-background', $attrs['notice_close_background'] ?? '' );
 		self::add_var( $vars, 'notice-close-border', $attrs['notice_close_border'] ?? '', 'border' );
+		self::add_border_vars( $vars, 'notice-close-border', $attrs['notice_close_border'] ?? array() );
 		self::add_var( $vars, 'notice-close-padding', $attrs['notice_close_padding'] ?? '', 'box' );
+		self::add_box_sides( $vars, 'notice-close-padding', $attrs['notice_close_padding'] ?? array() );
 		return implode(
 			';',
 			array_map(
@@ -350,7 +411,9 @@ final class Integration {
 		}
 		self::add_var( $vars, 'back-background', $attrs['background'] ?? '' );
 		self::add_var( $vars, 'back-padding', $attrs['padding'] ?? '', 'box' );
+		self::add_box_sides( $vars, 'back-padding', $attrs['padding'] ?? array() );
 		self::add_var( $vars, 'back-border', $attrs['border'] ?? '', 'border' );
+		self::add_border_vars( $vars, 'back-border', $attrs['border'] ?? array() );
 		self::add_var( $vars, 'back-icon-gap', $attrs['icon_gap'] ?? '', 'dimension' );
 		self::add_var( $vars, 'back-icon-size', $attrs['icon_size'] ?? '' );
 		self::add_var( $vars, 'back-icon-color', $attrs['icon_color'] ?? '' );
@@ -399,52 +462,7 @@ final class Integration {
 		return $map[ $key ] ?? ''; }
 
 	private static function safe_icon( $icon ): string {
-		$cache_key = is_scalar( $icon ) ? (string) $icon : md5( (string) wp_json_encode( $icon ) );
-		if ( array_key_exists( $cache_key, self::$icon_cache ) ) {
-			return self::$icon_cache[ $cache_key ];
-		}
-		$id  = 0;
-		$key = '';
-		if ( is_array( $icon ) ) {
-			$key = isset( $icon['icon'] ) ? sanitize_key( (string) $icon['icon'] ) : '';
-			$id  = isset( $icon['id'] ) ? absint( $icon['id'] ) : 0;
-			if ( ! $id && isset( $icon['svg']['id'] ) ) {
-				$id = absint( $icon['svg']['id'] );
-			}
-		} elseif ( is_numeric( $icon ) ) {
-			$id = absint( $icon );
-		} elseif ( is_string( $icon ) ) {
-			$value = trim( $icon );
-			if ( $value === '' ) {
-				return '';
-			} if ( strpos( $value, '<' ) === 0 ) {
-				if ( preg_match( '#^<i\s+class="[a-zA-Z0-9 _\-]+"\s*/?>$#i', $value ) || preg_match( '#^<i\s+class="[a-zA-Z0-9 _\-]+"\s*></i>$#i', $value ) ) {
-						self::$icon_cache[ $cache_key ] = $value;
-						return $value;
-				} return '';
-			} if ( ctype_digit( $value ) ) {
-				$id = absint( $value );
-			} else {
-				$key = sanitize_key( $value );
-			}
-		}
-		if ( $key !== '' && strpos( $key, '/' ) !== false && function_exists( 'wp_get_icon' ) ) {
-			$native = wp_get_icon( $key, array( 'size' => null ) );
-			if ( is_string( $native ) && $native !== '' ) {
-					self::$icon_cache[ $cache_key ] = $native;
-					return $native; }
-		}
-			// Only bundled, trusted icons are emitted; attachment SVGs are not inlined.
-			$allowed = array( 'check', 'close', 'error', 'info', 'warning' );
-		if ( $key !== '' && in_array( $key, $allowed, true ) ) {
-			$file = PEYVAST_AUTH_DIR . 'assets/img/' . $key . '.svg';
-			if ( is_readable( $file ) ) {
-					$raw                            = file_get_contents( $file );
-					self::$icon_cache[ $cache_key ] = $raw === false ? '' : $raw;
-					return self::$icon_cache[ $cache_key ]; }
-		}
-			self::$icon_cache[ $cache_key ] = '';
-			return '';
+		return AuthState::render_icon( $icon );
 	}
 
 	private static function icon_value( array $attrs, string $key ) {
@@ -673,7 +691,7 @@ final class Integration {
 		$stages['password'] = self::render_password_stage( $state['ids']['password_identifier'], $state['ids']['password_login'], $state['identifier_email_enabled'], $state['placeholders']['password_identifier'], $state['placeholders']['password'], $state['texts']['login'], $state['icons']['login'], $password_forgot_text, $state['reset_enabled'], $attrs, $options );
 		$stages['otp']      = self::render_otp_stage( $state['otp_length'], $state['texts']['resend'], $state['texts']['verify'], $state['icons']['verify'], $state['ids']['instance'], $attrs, $options );
 		$stages['register'] = self::render_register_stage( $state['fields'], $state['ids']['first_name'], $state['ids']['last_name'], $state['ids']['email'], $state['ids']['password'], $state['texts']['register'], $state['icons']['register'], $attrs, $state['placeholders']['first_name'], $state['placeholders']['last_name'], $state['placeholders']['email'], $state['placeholders']['password'], $options );
-		$stages['forgot']   = self::render_forgot_stage( $state['ids']['forgot'], $state['identifier_email_enabled'], $state['placeholders']['forgot_identifier'], $state['texts']['continue'], $state['icons']['continue'], $attrs, $options );
+		$stages['forgot']   = self::render_forgot_stage( $state['ids']['forgot'], $state['identifier_email_enabled'], $state['placeholders']['forgot_identifier'], $state['texts']['forgot_send'], $state['icons']['forgot'], $attrs, $options );
 		$stages['reset']    = self::render_reset_stage( $state['ids']['new_password'], $state['placeholders']['new_password'], $state['icons']['reset_password'], $attrs, $options );
 		return $stages;
 	}

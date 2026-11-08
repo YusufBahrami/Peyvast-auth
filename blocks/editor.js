@@ -3,7 +3,7 @@
 
     const { registerBlockType } = wp.blocks;
     const { InspectorControls, MediaUpload, MediaUploadCheck, useBlockProps } = wp.blockEditor;
-    const { PanelBody, TextControl, TextareaControl, ToggleControl, SelectControl, Notice, RangeControl, ColorPalette, BoxControl, FontSizePicker, UnitControl } = wp.components;
+    const { PanelBody, TextControl, TextareaControl, ToggleControl, SelectControl, Notice, RangeControl, ColorPalette, BoxControl, FontSizePicker, UnitControl, Button } = wp.components;
     const BorderControl = wp.blockEditor?.BorderControl || wp.components?.BorderControl;
     const BoxShadowControl = wp.components?.__experimentalBoxShadowControl || wp.blockEditor?.__experimentalBoxShadowControl;
     const { __ } = wp.i18n;
@@ -61,7 +61,8 @@
                     }, id ? t('Change SVG icon') : t('Select SVG icon'))
                 }),
                 id ? el('span', { className: 'peyvast-auth-block-icon-control__selected' }, `${t('SVG selected')} #${id}`) : null
-            )
+            ),
+            id ? el(Button, { variant: 'link', isDestructive: true, onClick: () => setAttributes({ [key]: 0 }) }, t('Remove icon')) : null
         );
     }
 
@@ -76,11 +77,11 @@
         return '';
     }
 
-    function ColorField({ label, value, onChange }) {
+    function ColorField({ label, value, onChange, disabled = false }) {
         if (!ColorPalette) return null;
         return el('div', { className: 'peyvast-auth-block-control' },
             el('p', { className: 'components-base-control__label' }, label),
-            el(ColorPalette, { value: value || undefined, onChange })
+            el(ColorPalette, { value: value || undefined, onChange, disabled })
         );
     }
 
@@ -113,7 +114,7 @@
         });
     }
 
-    function FontField({ label, value, onChange }) {
+    function FontField({ label, value, onChange, disabled = false }) {
         if (!FontSizePicker) return null;
         return el(FontSizePicker, {
             label,
@@ -122,7 +123,8 @@
             onChange: next => onChange(cssValue(next)),
             __nextHasNoMarginBottom: true,
             fallbackFontSize: 16,
-            withReset: true
+            withReset: true,
+            disabled
         });
     }
 
@@ -139,13 +141,18 @@
         });
     }
 
-    function StageControls({ attributes, setAttributes }) {
-        return el(PanelBody, { title: t('Stages'), initialOpen: false },
+    function StageContentControls({ attributes, setAttributes }) {
+        return el(PanelBody, { title: t('Stage Content'), initialOpen: false },
             ...stages.flatMap(([key, label]) => [
                 el(TextControl, { key: key + '-title', label: label + ' title', help: t('Supported variable: {method}.'), value: attributes[key + '_title'] || '', onChange: value => setAttributes({ [key + '_title']: value }) }),
                 el(ToggleControl, { key: key + '-toggle', label: t('Show description'), checked: !!attributes['show_' + key + '_description'], onChange: value => setAttributes({ ['show_' + key + '_description']: value }) }),
                 el(TextareaControl, { key: key + '-description', label: label + ' description', help: t('Supported variable: {method}. HTML is allowed and sanitized before output.'), disabled: !attributes['show_' + key + '_description'], value: attributes[key + '_description'] || '', onChange: value => setAttributes({ [key + '_description']: value }) })
-            ]),
+            ])
+        );
+    }
+
+    function StageStyleControls({ attributes, setAttributes }) {
+        return el(PanelBody, { title: t('Stage Typography and Spacing'), initialOpen: false },
             el(FontField, { label: 'Title font size', value: attributes.stage_title_font_size, onChange: value => setAttributes({ stage_title_font_size: value || '' }) }),
             el(SelectControl, { label: 'Title font weight', value: attributes.stage_title_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }, { label: '800', value: '800' }], onChange: value => setAttributes({ stage_title_font_weight: value }) }),
             el(SelectControl, { label: 'Title alignment', value: attributes.stage_title_text_align || '', options: [{ label: t('Default'), value: '' }, { label: 'Left', value: 'left' }, { label: 'Center', value: 'center' }, { label: 'Right', value: 'right' }, { label: 'Justify', value: 'justify' }], onChange: value => setAttributes({ stage_title_text_align: value }) }),
@@ -196,55 +203,64 @@
     }
 
     function FormControls({ attributes, setAttributes }) {
-        return el(PanelBody, { title: 'Form Fields', initialOpen: false },
-            ...fields.flatMap(([key, label]) => [
-                el(TextControl, { key: key + '-label', label: label + ' label', help: t('Supported variable: {method}. Shows the enabled sign-in method for that flow.'), value: attributes[key + '_label'] || '', onChange: value => setAttributes({ [key + '_label']: value }) }),
-                el(TextControl, { key: key + '-placeholder', label: label + ' placeholder', help: t('Supported variable: {method}. Shows the enabled sign-in method for that flow.'), value: attributes[key + '_placeholder'] || '', onChange: value => setAttributes({ [key + '_placeholder']: value }) })
-            ]),
-            el(FontField, { label: 'Label font size', value: attributes.form_label_font_size, onChange: value => setAttributes({ form_label_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Label font weight', value: attributes.form_label_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_label_font_weight: value }) }),
-            el(UnitValueField, { label: 'Label line height', value: attributes.form_label_line_height, onChange: value => setAttributes({ form_label_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
-            el(UnitValueField, { label: 'Label letter spacing', value: attributes.form_label_letter_spacing, onChange: value => setAttributes({ form_label_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
-            el(FontField, { label: 'Focused label font size', value: attributes.form_label_focus_font_size, onChange: value => setAttributes({ form_label_focus_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Focused label font weight', value: attributes.form_label_focus_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_label_focus_font_weight: value }) }),
-            el(UnitValueField, { label: 'Focused label line height', value: attributes.form_label_focus_line_height, onChange: value => setAttributes({ form_label_focus_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
-            el(UnitValueField, { label: 'Focused label letter spacing', value: attributes.form_label_focus_letter_spacing, onChange: value => setAttributes({ form_label_focus_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
-            el(ColorField, { label: 'Label text color', value: attributes.form_label_text_color, onChange: value => setAttributes({ form_label_text_color: value || '' }) }),
-            el(BoxField, { label: t('Label margin'), value: attributes.form_label_margin, onChange: value => setAttributes({ form_label_margin: value || {} }) }),
-            el(FontField, { label: 'Placeholder font size', value: attributes.form_placeholder_font_size, onChange: value => setAttributes({ form_placeholder_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Placeholder font weight', value: attributes.form_placeholder_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_placeholder_font_weight: value }) }),
-            el(UnitValueField, { label: 'Placeholder line height', value: attributes.form_placeholder_line_height, onChange: value => setAttributes({ form_placeholder_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
-            el(UnitValueField, { label: 'Placeholder letter spacing', value: attributes.form_placeholder_letter_spacing, onChange: value => setAttributes({ form_placeholder_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
-            el(ColorField, { label: 'Placeholder text color', value: attributes.form_placeholder_text_color, onChange: value => setAttributes({ form_placeholder_text_color: value || '' }) }),
-            el(FontField, { label: 'Input font size', value: attributes.form_input_font_size, onChange: value => setAttributes({ form_input_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Input font weight', value: attributes.form_input_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_input_font_weight: value }) }),
-            el(UnitValueField, { label: 'Input line height', value: attributes.form_input_line_height, onChange: value => setAttributes({ form_input_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
-            el(UnitValueField, { label: 'Input letter spacing', value: attributes.form_input_letter_spacing, onChange: value => setAttributes({ form_input_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
-            el(ColorField, { label: t('Input text color'), value: attributes.form_input_text_color, onChange: value => setAttributes({ form_input_text_color: value || '' }) }),
-            el(RangeControl, { label: t('Input height'), min: 28, max: 96, value: attributes.form_input_height || undefined, onChange: value => setAttributes({ form_input_height: value || 0 }) }),
-            el(BoxField, { label: t('Input padding'), value: attributes.form_input_padding, onChange: value => setAttributes({ form_input_padding: value || {} }) }),
-            el(ColorField, { label: t('Input background'), value: attributes.form_input_background, onChange: value => setAttributes({ form_input_background: value || '' }) }),
-            el(BorderField, { label: t('Input border'), value: attributes.form_input_border, onChange: value => setAttributes({ form_input_border: value || {} }) }),
-            el(BoxShadowField, { label: t('Input focus box shadow'), value: attributes.form_input_outline, onChange: value => setAttributes({ form_input_outline: value || '' }) }),
-            el('h3', { className: 'peyvast-auth-editor-action-group__title' }, t('OTP fields')),
-            el(UnitValueField, { label: t('OTP field width'), value: attributes.otp_field_width, onChange: value => setAttributes({ otp_field_width: value || '' }), min: 16, max: 200, step: 1 }),
-            el(UnitValueField, { label: t('OTP field height'), value: attributes.otp_field_height, onChange: value => setAttributes({ otp_field_height: value || '' }), min: 24, max: 160, step: 1 }),
-            el(FontField, { label: 'Inline error font size', value: attributes.inline_error_font_size, onChange: value => setAttributes({ inline_error_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Inline error font weight', value: attributes.inline_error_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ inline_error_font_weight: value }) }),
-            el(FontField, { label: 'Error label font size', value: attributes.inline_error_label_font_size, onChange: value => setAttributes({ inline_error_label_font_size: value || '' }) }),
-            el(SelectControl, { label: 'Error label font weight', value: attributes.inline_error_label_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ inline_error_label_font_weight: value }) }),
-            el(BoxField, { label: t('Inline error margin'), value: attributes.inline_error_margin, onChange: value => setAttributes({ inline_error_margin: value || {} }) }),
-            el(BoxField, { label: t('Inline error padding'), value: attributes.inline_error_padding, onChange: value => setAttributes({ inline_error_padding: value || {} }) }),
-            el(BorderField, { label: t('Inline error border'), value: attributes.inline_error_border, onChange: value => setAttributes({ inline_error_border: value || {} }) }),
-            el(ColorField, { label: t('Error input background'), value: attributes.inline_error_input_background, onChange: value => setAttributes({ inline_error_input_background: value || '' }) }),
-            el(BorderField, { label: 'Error input border', value: attributes.inline_error_input_border, onChange: value => setAttributes({ inline_error_input_border: value || {} }) }),
-            el(BoxShadowField, { label: t('Error input box shadow'), value: attributes.inline_error_input_outline, onChange: value => setAttributes({ inline_error_input_outline: value || '' }) })
+        return el(Fragment, {},
+            el(PanelBody, { title: t('Field Text'), initialOpen: false },
+                ...fields.flatMap(([key, label]) => [
+                    el(TextControl, { key: key + '-label', label: label + ' label', help: t('Supported variable: {method}. Shows the enabled sign-in method for that flow.'), value: attributes[key + '_label'] || '', onChange: value => setAttributes({ [key + '_label']: value }) }),
+                    el(TextControl, { key: key + '-placeholder', label: label + ' placeholder', help: t('Supported variable: {method}. Shows the enabled sign-in method for that flow.'), value: attributes[key + '_placeholder'] || '', onChange: value => setAttributes({ [key + '_placeholder']: value }) })
+                ])
+            ),
+            el(PanelBody, { title: t('Labels and Placeholders'), initialOpen: false },
+                el(FontField, { label: 'Label font size', value: attributes.form_label_font_size, onChange: value => setAttributes({ form_label_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Label font weight', value: attributes.form_label_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_label_font_weight: value }) }),
+                el(UnitValueField, { label: 'Label line height', value: attributes.form_label_line_height, onChange: value => setAttributes({ form_label_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
+                el(UnitValueField, { label: 'Label letter spacing', value: attributes.form_label_letter_spacing, onChange: value => setAttributes({ form_label_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
+                el(FontField, { label: 'Focused label font size', value: attributes.form_label_focus_font_size, onChange: value => setAttributes({ form_label_focus_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Focused label font weight', value: attributes.form_label_focus_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_label_focus_font_weight: value }) }),
+                el(UnitValueField, { label: 'Focused label line height', value: attributes.form_label_focus_line_height, onChange: value => setAttributes({ form_label_focus_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
+                el(UnitValueField, { label: 'Focused label letter spacing', value: attributes.form_label_focus_letter_spacing, onChange: value => setAttributes({ form_label_focus_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
+                el(ColorField, { label: 'Label text color', value: attributes.form_label_text_color, onChange: value => setAttributes({ form_label_text_color: value || '' }) }),
+                el(BoxField, { label: t('Label margin'), value: attributes.form_label_margin, onChange: value => setAttributes({ form_label_margin: value || {} }) }),
+                el(FontField, { label: 'Placeholder font size', value: attributes.form_placeholder_font_size, onChange: value => setAttributes({ form_placeholder_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Placeholder font weight', value: attributes.form_placeholder_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_placeholder_font_weight: value }) }),
+                el(UnitValueField, { label: 'Placeholder line height', value: attributes.form_placeholder_line_height, onChange: value => setAttributes({ form_placeholder_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
+                el(UnitValueField, { label: 'Placeholder letter spacing', value: attributes.form_placeholder_letter_spacing, onChange: value => setAttributes({ form_placeholder_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
+                el(ColorField, { label: 'Placeholder text color', value: attributes.form_placeholder_text_color, onChange: value => setAttributes({ form_placeholder_text_color: value || '' }) })
+            ),
+            el(PanelBody, { title: t('Input Appearance'), initialOpen: false },
+                el(FontField, { label: 'Input font size', value: attributes.form_input_font_size, onChange: value => setAttributes({ form_input_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Input font weight', value: attributes.form_input_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ form_input_font_weight: value }) }),
+                el(UnitValueField, { label: 'Input line height', value: attributes.form_input_line_height, onChange: value => setAttributes({ form_input_line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
+                el(UnitValueField, { label: 'Input letter spacing', value: attributes.form_input_letter_spacing, onChange: value => setAttributes({ form_input_letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
+                el(ColorField, { label: t('Input text color'), value: attributes.form_input_text_color, onChange: value => setAttributes({ form_input_text_color: value || '' }) }),
+                el(RangeControl, { label: t('Input height'), min: 28, max: 96, value: attributes.form_input_height || undefined, onChange: value => setAttributes({ form_input_height: value || 0 }) }),
+                el(BoxField, { label: t('Input padding'), value: attributes.form_input_padding, onChange: value => setAttributes({ form_input_padding: value || {} }) }),
+                el(ColorField, { label: t('Input background'), value: attributes.form_input_background, onChange: value => setAttributes({ form_input_background: value || '' }) }),
+                el(BorderField, { label: t('Input border'), value: attributes.form_input_border, onChange: value => setAttributes({ form_input_border: value || {} }) }),
+                el(BoxShadowField, { label: t('Input focus box shadow'), value: attributes.form_input_outline, onChange: value => setAttributes({ form_input_outline: value || '' }) })
+            ),
+            el(PanelBody, { title: t('OTP Fields'), initialOpen: false },
+                el(UnitValueField, { label: t('OTP field width'), value: attributes.otp_field_width, onChange: value => setAttributes({ otp_field_width: value || '' }), min: 16, max: 200, step: 1 }),
+                el(UnitValueField, { label: t('OTP field height'), value: attributes.otp_field_height, onChange: value => setAttributes({ otp_field_height: value || '' }), min: 24, max: 160, step: 1 })
+            ),
+            el(PanelBody, { title: t('Validation and Errors'), initialOpen: false },
+                el(FontField, { label: 'Inline error font size', value: attributes.inline_error_font_size, onChange: value => setAttributes({ inline_error_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Inline error font weight', value: attributes.inline_error_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ inline_error_font_weight: value }) }),
+                el(FontField, { label: 'Error label font size', value: attributes.inline_error_label_font_size, onChange: value => setAttributes({ inline_error_label_font_size: value || '' }) }),
+                el(SelectControl, { label: 'Error label font weight', value: attributes.inline_error_label_font_weight || '', options: [{ label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' }, { label: '700', value: '700' }], onChange: value => setAttributes({ inline_error_label_font_weight: value }) }),
+                el(BoxField, { label: t('Inline error margin'), value: attributes.inline_error_margin, onChange: value => setAttributes({ inline_error_margin: value || {} }) }),
+                el(BoxField, { label: t('Inline error padding'), value: attributes.inline_error_padding, onChange: value => setAttributes({ inline_error_padding: value || {} }) }),
+                el(BorderField, { label: t('Inline error border'), value: attributes.inline_error_border, onChange: value => setAttributes({ inline_error_border: value || {} }) }),
+                el(ColorField, { label: t('Error input background'), value: attributes.inline_error_input_background, onChange: value => setAttributes({ inline_error_input_background: value || '' }) }),
+                el(BorderField, { label: 'Error input border', value: attributes.inline_error_input_border, onChange: value => setAttributes({ inline_error_input_border: value || {} }) }),
+                el(BoxShadowField, { label: t('Error input box shadow'), value: attributes.inline_error_input_outline, onChange: value => setAttributes({ inline_error_input_outline: value || '' }) })
+            )
         );
     }
 
-    function UnitValueField({ label, value, onChange, min = 0, max = 200, step = 1 }) {
+    function UnitValueField({ label, value, onChange, min = 0, max = 200, step = 1, disabled = false }) {
         if (!UnitControl) {
-            return el(TextControl, { label, value: cssValue(value), onChange: next => onChange(cssValue(next)) });
+            return el(TextControl, { label, value: cssValue(value), onChange: next => onChange(cssValue(next)), disabled });
         }
         return el(UnitControl, {
             label,
@@ -253,6 +269,7 @@
             min,
             max,
             step,
+            disabled,
             units: UNIT_OPTIONS,
             __next40pxDefaultSize: true
         });
@@ -337,27 +354,32 @@
     }
 
     function ActionIconControls({ attributes, setAttributes, keyPrefix, label }) {
+        const hasIcon = !!Number(attributes[keyPrefix + '_icon']);
         return el(Fragment, {},
             el('div', { className: 'peyvast-auth-editor-action-group__control' }, iconControl(keyPrefix + '_icon', attributes, setAttributes)),
             el(SelectControl, {
                 label: label + ' icon position',
                 value: attributes[keyPrefix + '_icon_position'] || 'left',
                 options: [{ label: 'Left', value: 'left' }, { label: 'Right', value: 'right' }],
+                disabled: !hasIcon,
                 onChange: value => setAttributes({ [keyPrefix + '_icon_position']: value })
             }),
             el(FontField, {
                 label: label + ' icon size',
                 value: attributes[keyPrefix + '_icon_size'],
+                disabled: !hasIcon,
                 onChange: value => setAttributes({ [keyPrefix + '_icon_size']: value || '' })
             }),
             el(ColorField, {
                 label: label + ' icon color',
                 value: attributes[keyPrefix + '_icon_color'],
+                disabled: !hasIcon,
                 onChange: value => setAttributes({ [keyPrefix + '_icon_color']: value || '' })
             }),
             el(UnitValueField, {
                 label: label + ' icon gap',
                 value: attributes[keyPrefix + '_icon_gap'],
+                disabled: !hasIcon,
                 onChange: value => setAttributes({ [keyPrefix + '_icon_gap']: value || '' }),
                 min: 0,
                 max: 100,
@@ -366,15 +388,16 @@
             el(ToggleControl, {
                 label: label + ' space between',
                 checked: !!attributes[keyPrefix + '_icon_space'],
+                disabled: !hasIcon,
                 onChange: value => setAttributes({ [keyPrefix + '_icon_space']: value })
             })
         );
     }
 
-    function ActionStyleControls({ attributes, setAttributes, prefix, label, showIcon = true, showText = true }) {
+    function ActionStyleControls({ attributes, setAttributes, prefix, label, showIcon = true, showText = true, textPrefix = prefix }) {
         return el('div', { className: 'peyvast-auth-editor-action-group' },
             el('h3', { className: 'peyvast-auth-editor-action-group__title' }, label),
-            showText ? el(TextControl, { label: 'Text', value: attributes[prefix + '_text'] || '', onChange: value => setAttributes({ [prefix + '_text']: value }) }) : null,
+            showText ? el(TextControl, { label: 'Text', value: attributes[textPrefix + '_text'] || '', onChange: value => setAttributes({ [textPrefix + '_text']: value }) }) : null,
             showIcon ? el(ActionIconControls, { attributes, setAttributes, keyPrefix: prefix, label }) : null,
             el(TypographyControls, { attributes, setAttributes, prefix, label }),
             el(ActionVisualControls, { attributes, setAttributes, prefix, label })
@@ -383,7 +406,7 @@
 
     function PrimaryActionsControls({ attributes, setAttributes }) {
         return el(PanelBody, { title: t('Primary Actions'), initialOpen: false },
-            ...actions.map(([action, label]) => el(ActionStyleControls, { key: action, prefix: action, label, attributes, setAttributes }))
+            ...actions.map(([action, label]) => el(ActionStyleControls, { key: action, prefix: action, textPrefix: action === 'forgot' ? 'forgot_send' : action, label, attributes, setAttributes }))
         );
     }
 
@@ -433,7 +456,8 @@
                 el(SelectControl, { label: t('Preview stage'), value: previewStage, options: stages.map(([value, label]) => ({ value, label })), onChange: setPreviewStage }),
                 el(Notice, { status: 'info', isDismissible: false }, 'Preview stage is editor-only and is never persisted as frontend state.')
             ),
-            el(StageControls, { attributes, setAttributes }),
+            el(StageContentControls, { attributes, setAttributes }),
+            el(StageStyleControls, { attributes, setAttributes }),
             el(ContainerControls, { attributes, setAttributes }),
             el(InformationControls, { attributes, setAttributes }),
             el(FormControls, { attributes, setAttributes }),
@@ -444,67 +468,28 @@
         );
     }
 
-    function BackButtonTypographyControls({ attributes, setAttributes }) {
-        return el('div', { className: 'peyvast-auth-editor-action-group__section' },
-            el('h4', { className: 'peyvast-auth-editor-action-group__subtitle' }, t('Typography')),
-            el(FontField, { label: 'Font size', value: attributes.font_size, onChange: value => setAttributes({ font_size: value || '' }) }),
-            el(SelectControl, {
-                label: t('Font weight'), value: attributes.font_weight || '',
-                options: [
-                    { label: t('Default'), value: '' }, { label: '400', value: '400' }, { label: '500', value: '500' },
-                    { label: '600', value: '600' }, { label: '700', value: '700' }, { label: '800', value: '800' }
-                ],
-                onChange: value => setAttributes({ font_weight: value })
-            }),
-            el(UnitValueField, { label: 'Line height', value: attributes.line_height, onChange: value => setAttributes({ line_height: value || '' }), min: 0, max: 10, step: 0.05 }),
-            el(UnitValueField, { label: 'Letter spacing', value: attributes.letter_spacing, onChange: value => setAttributes({ letter_spacing: value || '' }), min: -10, max: 20, step: 0.1 }),
-            el(SelectControl, {
-                label: 'Text align', value: attributes.text_align || '',
-                options: [
-                    { label: t('Default'), value: '' }, { label: 'Left', value: 'left' }, { label: 'Center', value: 'center' },
-                    { label: 'Right', value: 'right' }, { label: 'Justify', value: 'justify' }
-                ],
-                onChange: value => setAttributes({ text_align: value })
-            }),
-            el(ColorField, { label: 'Text color', value: attributes.text_color, onChange: value => setAttributes({ text_color: value || '' }) })
-        );
-    }
-
-    function BackButtonAppearanceControls({ attributes, setAttributes }) {
-        return el('div', { className: 'peyvast-auth-editor-action-group__section' },
-            el('h4', { className: 'peyvast-auth-editor-action-group__subtitle' }, t('Appearance')),
-            el(ColorField, { label: t('Background'), value: attributes.background, onChange: value => setAttributes({ background: value || '' }) }),
-            el(BoxField, { label: t('Padding'), value: attributes.padding, onChange: value => setAttributes({ padding: value || {} }) }),
-            el(BorderField, { label: t('Border'), value: attributes.border, onChange: value => setAttributes({ border: value || {} }) })
-        );
-    }
-
     function BackButtonInspector({ attributes, setAttributes }) {
+        const hasIcon = !!attributes.show_icon && Number(attributes.icon) > 0;
         return el(InspectorControls, {},
             el(PanelBody, { title: t('Back Button'), initialOpen: true },
                 el(TextControl, { label: t('Text'), value: attributes.text || '', onChange: value => setAttributes({ text: value }) }),
                 iconControl('icon', attributes, setAttributes),
-                el(SelectControl, { label: t('Icon position'), value: attributes.icon_position || 'before', options: [{ label: t('Before text'), value: 'before' }, { label: t('After text'), value: 'after' }], onChange: value => setAttributes({ icon_position: value }) }),
-                el(FontField, { label: t('Icon size'), value: attributes.icon_size, onChange: value => setAttributes({ icon_size: value || '' }) }),
-                el(ColorField, { label: t('Icon color'), value: attributes.icon_color, onChange: value => setAttributes({ icon_color: value || '' }) }),
-                el(UnitValueField, { label: t('Icon gap'), value: attributes.icon_gap, onChange: value => setAttributes({ icon_gap: value || '' }), min: 0, max: 100, step: 1 }),
-                el(ToggleControl, { label: t('Space between'), checked: !!attributes.icon_space, onChange: value => setAttributes({ icon_space: value }) }),
+                el(SelectControl, { label: t('Icon position'), value: attributes.icon_position || 'before', disabled: !hasIcon, options: [{ label: t('Before text'), value: 'before' }, { label: t('After text'), value: 'after' }], onChange: value => setAttributes({ icon_position: value }) }),
+                el(FontField, { label: t('Icon size'), value: attributes.icon_size, disabled: !hasIcon, onChange: value => setAttributes({ icon_size: value || '' }) }),
+                el(ColorField, { label: t('Icon color'), value: attributes.icon_color, disabled: !hasIcon, onChange: value => setAttributes({ icon_color: value || '' }) }),
+                el(UnitValueField, { label: t('Icon gap'), value: attributes.icon_gap, disabled: !hasIcon, onChange: value => setAttributes({ icon_gap: value || '' }), min: 0, max: 100, step: 1 }),
+                el(ToggleControl, { label: t('Space between'), checked: !!attributes.icon_space, disabled: !hasIcon, onChange: value => setAttributes({ icon_space: value }) }),
                 el(ToggleControl, { label: t('Show text'), checked: attributes.show_text !== false, onChange: value => setAttributes({ show_text: value }) }),
                 el(ToggleControl, { label: t('Show icon'), checked: !!attributes.show_icon, onChange: value => setAttributes({ show_icon: value }) }),
                 el(TextControl, { label: t('Accessibility label'), help: t('Used when visible text is hidden.'), value: attributes.aria_label || '', onChange: value => setAttributes({ aria_label: value }) }),
-                el(TextControl, { label: t('Authentication target'), help: t('Optional CSS selector for a specific authentication instance.'), value: attributes.target || '', onChange: value => setAttributes({ target: value }) }),
-                el(BackButtonTypographyControls, { attributes, setAttributes }),
-                el(BackButtonAppearanceControls, { attributes, setAttributes })
+                el(TextControl, { label: t('Authentication target'), help: t('Optional CSS selector for a specific authentication instance.'), value: attributes.target || '', onChange: value => setAttributes({ target: value }) })
             )
         );
     }
 
     function AuthEdit(props) {
         const { attributes, setAttributes, clientId } = props;
-        const storedPreviewStage = stages.some(([value]) => value === attributes.preview_stage)
-            ? attributes.preview_stage
-            : 'phone';
-        const [previewStage, setPreviewStage] = useState(storedPreviewStage);
+        const [previewStage, setPreviewStage] = useState('phone');
         const blockProps = useBlockProps({ className: 'peyvast-auth-editor-preview', onClick: () => wp.data.dispatch('core/block-editor').selectBlock(clientId) });
         return el(Fragment, {},
             el('div', blockProps, el(Preview, { name: 'peyvast/auth', attributes, stage: previewStage })),

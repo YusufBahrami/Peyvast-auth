@@ -1082,3 +1082,278 @@ input:-webkit-autofill:focus {
   border-color: var(--peyvast-auth-success, #067647) !important;
   box-shadow: 0 0 0 2px var(--peyvast-auth-success-shadow, rgba(6, 118, 71, 0.15)) !important;
 }
+
+.peyvast-auth--block .peyvast-auth-stage__header {
+  margin-top: var(--peyvast-auth-container-header-margin-top, 0);
+  margin-right: var(--peyvast-auth-container-header-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-container-header-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-container-header-margin-left, 0);
+}
+.peyvast-auth--block .peyvast-auth-stage__content {
+  margin-top: var(--peyvast-auth-container-content-margin-top, 0);
+  margin-right: var(--peyvast-auth-container-content-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-container-content-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-container-content-margin-left, 0);
+}
+.peyvast-auth--block .peyvast-auth-stage__actions {
+  margin-top: var(--peyvast-auth-container-actions-margin-top, 0);
+  margin-right: var(--peyvast-auth-container-actions-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-container-actions-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-container-actions-margin-left, 0);
+}
+.peyvast-auth--block .peyvast-auth__information-item {
+  padding-top: var(--peyvast-auth-information-padding-top, 0);
+  padding-right: var(--peyvast-auth-information-padding-right, 0);
+  padding-bottom: var(--peyvast-auth-information-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-information-padding-left, 0);
+  margin-top: var(--peyvast-auth-information-margin-top, 0);
+  margin-right: var(--peyvast-auth-information-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-information-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-information-margin-left, 0);
+}
+.peyvast-auth--block .peyvast-auth-field__label {
+  margin-top: var(--peyvast-auth-form-label-margin-top, 0);
+  margin-right: var(--peyvast-auth-form-label-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-form-label-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-form-label-margin-left, 0);
+}
+.peyvast-auth--block .peyvast-auth-input {
+  padding-top: var(--peyvast-auth-input-padding-top, 0);
+  padding-right: var(--peyvast-auth-input-padding-right, 13px);
+  padding-bottom: var(--peyvast-auth-input-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-input-padding-left, 13px);
+}
+.peyvast-auth--block .peyvast-auth-field__error {
+  margin-top: var(--peyvast-auth-inline-error-margin-top, 6px);
+  margin-right: var(--peyvast-auth-inline-error-margin-right, 0);
+  margin-bottom: var(--peyvast-auth-inline-error-margin-bottom, 0);
+  margin-left: var(--peyvast-auth-inline-error-margin-left, 0);
+  padding-top: var(--peyvast-auth-inline-error-padding-top, 0);
+  padding-right: var(--peyvast-auth-inline-error-padding-right, 0);
+  padding-bottom: var(--peyvast-auth-inline-error-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-inline-error-padding-left, 0);
+}
+.peyvast-auth--block .peyvast-auth-button--continue,
+.peyvast-auth--block .peyvast-auth-button--verify,
+.peyvast-auth--block .peyvast-auth-button--login,
+.peyvast-auth--block .peyvast-auth-button--register,
+.peyvast-auth--block .peyvast-auth-button--forgot,
+.peyvast-auth--block .peyvast-auth-button--reset-password {
+  padding-top: var(--peyvast-auth-continue-padding-top, 0);
+  padding-right: var(--peyvast-auth-continue-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-continue-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-continue-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-button--verify {
+  padding-top: var(--peyvast-auth-verify-padding-top, 0);
+  padding-right: var(--peyvast-auth-verify-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-verify-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-verify-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-button--login {
+  padding-top: var(--peyvast-auth-login-padding-top, 0);
+  padding-right: var(--peyvast-auth-login-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-login-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-login-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-button--register {
+  padding-top: var(--peyvast-auth-register-padding-top, 0);
+  padding-right: var(--peyvast-auth-register-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-register-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-register-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-button--forgot {
+  padding-top: var(--peyvast-auth-forgot-padding-top, 0);
+  padding-right: var(--peyvast-auth-forgot-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-forgot-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-forgot-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-button--reset-password {
+  padding-top: var(--peyvast-auth-reset-password-padding-top, 0);
+  padding-right: var(--peyvast-auth-reset-password-padding-right, 16px);
+  padding-bottom: var(--peyvast-auth-reset-password-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-reset-password-padding-left, 16px);
+}
+.peyvast-auth--block .peyvast-auth-link--resend {
+  padding-top: var(--peyvast-auth-resend-padding-top, 4px);
+  padding-right: var(--peyvast-auth-resend-padding-right, 7px);
+  padding-bottom: var(--peyvast-auth-resend-padding-bottom, 4px);
+  padding-left: var(--peyvast-auth-resend-padding-left, 7px);
+}
+.peyvast-auth--block .peyvast-auth-link--password-link,
+.peyvast-auth--block .peyvast-auth-link--forgot-link {
+  padding-top: var(--peyvast-auth-secondary-padding-top, 4px);
+  padding-right: var(--peyvast-auth-secondary-padding-right, 7px);
+  padding-bottom: var(--peyvast-auth-secondary-padding-bottom, 4px);
+  padding-left: var(--peyvast-auth-secondary-padding-left, 7px);
+}
+.peyvast-auth--block .peyvast-auth-notice--success {
+  padding-top: var(--peyvast-auth-notice-success-padding-top, 11px);
+  padding-right: var(--peyvast-auth-notice-success-padding-right, 12px);
+  padding-bottom: var(--peyvast-auth-notice-success-padding-bottom, 11px);
+  padding-left: var(--peyvast-auth-notice-success-padding-left, 12px);
+}
+.peyvast-auth--block .peyvast-auth-notice--error {
+  padding-top: var(--peyvast-auth-notice-error-padding-top, 11px);
+  padding-right: var(--peyvast-auth-notice-error-padding-right, 12px);
+  padding-bottom: var(--peyvast-auth-notice-error-padding-bottom, 11px);
+  padding-left: var(--peyvast-auth-notice-error-padding-left, 12px);
+}
+.peyvast-auth--block .peyvast-auth-notice--warning {
+  padding-top: var(--peyvast-auth-notice-warning-padding-top, 11px);
+  padding-right: var(--peyvast-auth-notice-warning-padding-right, 12px);
+  padding-bottom: var(--peyvast-auth-notice-warning-padding-bottom, 11px);
+  padding-left: var(--peyvast-auth-notice-warning-padding-left, 12px);
+}
+.peyvast-auth--block .peyvast-auth-notice--info {
+  padding-top: var(--peyvast-auth-notice-info-padding-top, 11px);
+  padding-right: var(--peyvast-auth-notice-info-padding-right, 12px);
+  padding-bottom: var(--peyvast-auth-notice-info-padding-bottom, 11px);
+  padding-left: var(--peyvast-auth-notice-info-padding-left, 12px);
+}
+.peyvast-auth--block .peyvast-auth-notice__close {
+  padding-top: var(--peyvast-auth-notice-close-padding-top, 0);
+  padding-right: var(--peyvast-auth-notice-close-padding-right, 0);
+  padding-bottom: var(--peyvast-auth-notice-close-padding-bottom, 0);
+  padding-left: var(--peyvast-auth-notice-close-padding-left, 0);
+}
+.peyvast-auth-back {
+  padding-top: var(--peyvast-auth-back-padding-top, 6px);
+  padding-right: var(--peyvast-auth-back-padding-right, 8px);
+  padding-bottom: var(--peyvast-auth-back-padding-bottom, 6px);
+  padding-left: var(--peyvast-auth-back-padding-left, 8px);
+}
+.peyvast-auth--block .peyvast-auth-information-item,
+.peyvast-auth--block .peyvast-auth__information-item {
+  border-top: var(--peyvast-auth-information-border-top, var(--peyvast-auth-information-border, 0));
+  border-right: var(--peyvast-auth-information-border-right, var(--peyvast-auth-information-border, 0));
+  border-bottom: var(--peyvast-auth-information-border-bottom, var(--peyvast-auth-information-border, 0));
+  border-left: var(--peyvast-auth-information-border-left, var(--peyvast-auth-information-border, 0));
+  border-radius: var(--peyvast-auth-information-border-radius, 10px);
+}
+.peyvast-auth--block .peyvast-auth-input {
+  border-top: var(--peyvast-auth-input-border-top, var(--peyvast-auth-input-border, 1px solid var(--peyvast-auth-border)));
+  border-right: var(--peyvast-auth-input-border-right, var(--peyvast-auth-input-border, 1px solid var(--peyvast-auth-border)));
+  border-bottom: var(--peyvast-auth-input-border-bottom, var(--peyvast-auth-input-border, 1px solid var(--peyvast-auth-border)));
+  border-left: var(--peyvast-auth-input-border-left, var(--peyvast-auth-input-border, 1px solid var(--peyvast-auth-border)));
+  border-radius: var(--peyvast-auth-input-border-radius, var(--peyvast-auth-field-radius));
+}
+.peyvast-auth--block .peyvast-auth-field__error {
+  border-top: var(--peyvast-auth-inline-error-border-top, var(--peyvast-auth-inline-error-border, 0));
+  border-right: var(--peyvast-auth-inline-error-border-right, var(--peyvast-auth-inline-error-border, 0));
+  border-bottom: var(--peyvast-auth-inline-error-border-bottom, var(--peyvast-auth-inline-error-border, 0));
+  border-left: var(--peyvast-auth-inline-error-border-left, var(--peyvast-auth-inline-error-border, 0));
+  border-radius: var(--peyvast-auth-inline-error-border-radius, 0);
+}
+.peyvast-auth--block .peyvast-auth-field.is-error .peyvast-auth-input,
+.peyvast-auth--block .peyvast-auth-field.has-error .peyvast-auth-input,
+.peyvast-auth--block .peyvast-auth-input[aria-invalid="true"] {
+  border-top-width: var(--peyvast-auth-inline-error-input-border-top-width, var(--peyvast-auth-inline-error-input-border-width, 1px));
+  border-right-width: var(--peyvast-auth-inline-error-input-border-right-width, var(--peyvast-auth-inline-error-input-border-width, 1px));
+  border-bottom-width: var(--peyvast-auth-inline-error-input-border-bottom-width, var(--peyvast-auth-inline-error-input-border-width, 1px));
+  border-left-width: var(--peyvast-auth-inline-error-input-border-left-width, var(--peyvast-auth-inline-error-input-border-width, 1px));
+  border-top-style: var(--peyvast-auth-inline-error-input-border-top-style, var(--peyvast-auth-inline-error-input-border-style, solid));
+  border-right-style: var(--peyvast-auth-inline-error-input-border-right-style, var(--peyvast-auth-inline-error-input-border-style, solid));
+  border-bottom-style: var(--peyvast-auth-inline-error-input-border-bottom-style, var(--peyvast-auth-inline-error-input-border-style, solid));
+  border-left-style: var(--peyvast-auth-inline-error-input-border-left-style, var(--peyvast-auth-inline-error-input-border-style, solid));
+  border-top-color: var(--peyvast-auth-inline-error-input-border-top-color, var(--peyvast-auth-inline-error-input-border-color, var(--peyvast-auth-danger)));
+  border-right-color: var(--peyvast-auth-inline-error-input-border-right-color, var(--peyvast-auth-inline-error-input-border-color, var(--peyvast-auth-danger)));
+  border-bottom-color: var(--peyvast-auth-inline-error-input-border-bottom-color, var(--peyvast-auth-inline-error-input-border-color, var(--peyvast-auth-danger)));
+  border-left-color: var(--peyvast-auth-inline-error-input-border-left-color, var(--peyvast-auth-inline-error-input-border-color, var(--peyvast-auth-danger)));
+}
+.peyvast-auth--block .peyvast-auth-button--continue,
+.peyvast-auth--block .peyvast-auth-button--verify,
+.peyvast-auth--block .peyvast-auth-button--login,
+.peyvast-auth--block .peyvast-auth-button--register,
+.peyvast-auth--block .peyvast-auth-button--forgot,
+.peyvast-auth--block .peyvast-auth-button--reset-password {
+  border-top: var(--peyvast-auth-continue-border-top, var(--peyvast-auth-continue-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-continue-border-right, var(--peyvast-auth-continue-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-continue-border-bottom, var(--peyvast-auth-continue-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-continue-border-left, var(--peyvast-auth-continue-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-button--verify {
+  border-top: var(--peyvast-auth-verify-border-top, var(--peyvast-auth-verify-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-verify-border-right, var(--peyvast-auth-verify-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-verify-border-bottom, var(--peyvast-auth-verify-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-verify-border-left, var(--peyvast-auth-verify-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-button--login {
+  border-top: var(--peyvast-auth-login-border-top, var(--peyvast-auth-login-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-login-border-right, var(--peyvast-auth-login-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-login-border-bottom, var(--peyvast-auth-login-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-login-border-left, var(--peyvast-auth-login-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-button--register {
+  border-top: var(--peyvast-auth-register-border-top, var(--peyvast-auth-register-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-register-border-right, var(--peyvast-auth-register-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-register-border-bottom, var(--peyvast-auth-register-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-register-border-left, var(--peyvast-auth-register-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-button--forgot {
+  border-top: var(--peyvast-auth-forgot-border-top, var(--peyvast-auth-forgot-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-forgot-border-right, var(--peyvast-auth-forgot-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-forgot-border-bottom, var(--peyvast-auth-forgot-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-forgot-border-left, var(--peyvast-auth-forgot-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-button--reset-password {
+  border-top: var(--peyvast-auth-reset-password-border-top, var(--peyvast-auth-reset-password-border, var(--peyvast-auth-primary-border, 0)));
+  border-right: var(--peyvast-auth-reset-password-border-right, var(--peyvast-auth-reset-password-border, var(--peyvast-auth-primary-border, 0)));
+  border-bottom: var(--peyvast-auth-reset-password-border-bottom, var(--peyvast-auth-reset-password-border, var(--peyvast-auth-primary-border, 0)));
+  border-left: var(--peyvast-auth-reset-password-border-left, var(--peyvast-auth-reset-password-border, var(--peyvast-auth-primary-border, 0)));
+}
+.peyvast-auth--block .peyvast-auth-link--resend {
+  border-top: var(--peyvast-auth-resend-border-top, var(--peyvast-auth-resend-border, 0));
+  border-right: var(--peyvast-auth-resend-border-right, var(--peyvast-auth-resend-border, 0));
+  border-bottom: var(--peyvast-auth-resend-border-bottom, var(--peyvast-auth-resend-border, 0));
+  border-left: var(--peyvast-auth-resend-border-left, var(--peyvast-auth-resend-border, 0));
+}
+.peyvast-auth--block .peyvast-auth-link--password-link,
+.peyvast-auth--block .peyvast-auth-link--forgot-link {
+  border-top: var(--peyvast-auth-secondary-border-top, var(--peyvast-auth-secondary-border, 0));
+  border-right: var(--peyvast-auth-secondary-border-right, var(--peyvast-auth-secondary-border, 0));
+  border-bottom: var(--peyvast-auth-secondary-border-bottom, var(--peyvast-auth-secondary-border, 0));
+  border-left: var(--peyvast-auth-secondary-border-left, var(--peyvast-auth-secondary-border, 0));
+}
+.peyvast-auth--block .peyvast-auth-notice--success {
+  border-top: var(--peyvast-auth-notice-success-border-top, var(--peyvast-auth-notice-success-border, 1px solid var(--peyvast-auth-success)));
+  border-right: var(--peyvast-auth-notice-success-border-right, var(--peyvast-auth-notice-success-border, 1px solid var(--peyvast-auth-success)));
+  border-bottom: var(--peyvast-auth-notice-success-border-bottom, var(--peyvast-auth-notice-success-border, 1px solid var(--peyvast-auth-success)));
+  border-left: var(--peyvast-auth-notice-success-border-left, var(--peyvast-auth-notice-success-border, 1px solid var(--peyvast-auth-success)));
+  border-radius: var(--peyvast-auth-notice-success-border-radius, 11px);
+}
+.peyvast-auth--block .peyvast-auth-notice--error {
+  border-top: var(--peyvast-auth-notice-error-border-top, var(--peyvast-auth-notice-error-border, 1px solid var(--peyvast-auth-danger)));
+  border-right: var(--peyvast-auth-notice-error-border-right, var(--peyvast-auth-notice-error-border, 1px solid var(--peyvast-auth-danger)));
+  border-bottom: var(--peyvast-auth-notice-error-border-bottom, var(--peyvast-auth-notice-error-border, 1px solid var(--peyvast-auth-danger)));
+  border-left: var(--peyvast-auth-notice-error-border-left, var(--peyvast-auth-notice-error-border, 1px solid var(--peyvast-auth-danger)));
+  border-radius: var(--peyvast-auth-notice-error-border-radius, 11px);
+}
+.peyvast-auth--block .peyvast-auth-notice--warning {
+  border-top: var(--peyvast-auth-notice-warning-border-top, var(--peyvast-auth-notice-warning-border, 1px solid var(--peyvast-auth-warning)));
+  border-right: var(--peyvast-auth-notice-warning-border-right, var(--peyvast-auth-notice-warning-border, 1px solid var(--peyvast-auth-warning)));
+  border-bottom: var(--peyvast-auth-notice-warning-border-bottom, var(--peyvast-auth-notice-warning-border, 1px solid var(--peyvast-auth-warning)));
+  border-left: var(--peyvast-auth-notice-warning-border-left, var(--peyvast-auth-notice-warning-border, 1px solid var(--peyvast-auth-warning)));
+  border-radius: var(--peyvast-auth-notice-warning-border-radius, 11px);
+}
+.peyvast-auth--block .peyvast-auth-notice--info {
+  border-top: var(--peyvast-auth-notice-info-border-top, var(--peyvast-auth-notice-info-border, 1px solid #b2ddff));
+  border-right: var(--peyvast-auth-notice-info-border-right, var(--peyvast-auth-notice-info-border, 1px solid #b2ddff));
+  border-bottom: var(--peyvast-auth-notice-info-border-bottom, var(--peyvast-auth-notice-info-border, 1px solid #b2ddff));
+  border-left: var(--peyvast-auth-notice-info-border-left, var(--peyvast-auth-notice-info-border, 1px solid #b2ddff));
+  border-radius: var(--peyvast-auth-notice-info-border-radius, 11px);
+}
+.peyvast-auth--block .peyvast-auth-notice__close {
+  border-top: var(--peyvast-auth-notice-close-border-top, var(--peyvast-auth-notice-close-border, 0));
+  border-right: var(--peyvast-auth-notice-close-border-right, var(--peyvast-auth-notice-close-border, 0));
+  border-bottom: var(--peyvast-auth-notice-close-border-bottom, var(--peyvast-auth-notice-close-border, 0));
+  border-left: var(--peyvast-auth-notice-close-border-left, var(--peyvast-auth-notice-close-border, 0));
+  border-radius: var(--peyvast-auth-notice-close-border-radius, 7px);
+}
+.peyvast-auth--block .peyvast-auth-back {
+  border-top: var(--peyvast-auth-back-border-top, var(--peyvast-auth-back-border, 0));
+  border-right: var(--peyvast-auth-back-border-right, var(--peyvast-auth-back-border, 0));
+  border-bottom: var(--peyvast-auth-back-border-bottom, var(--peyvast-auth-back-border, 0));
+  border-left: var(--peyvast-auth-back-border-left, var(--peyvast-auth-back-border, 0));
+  border-radius: var(--peyvast-auth-back-border-radius, var(--peyvast-auth-back-radius, 9px));
+}

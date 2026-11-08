@@ -115,8 +115,9 @@ All endpoints are POST routes with argument schemas. Public permission callbacks
 
 ## Integrations
 
-- **Blocks:** authentication and back-button blocks with server rendering.
-- **Bricks:** authentication/back-button elements and dynamic tags.
+- **Blocks:** authentication and back-button blocks registered from WordPress block metadata, with server rendering and editor controls.
+- **Bricks:** authentication/back-button elements and dynamic tags. Dynamic data is resolved in configurable text fields, while styling uses Bricks element controls.
+- **Back navigation:** the back button returns to the last visited authentication stage; on the initial stage it uses browser history to return to the previous page.
 - **WooCommerce:** optional customer phone synchronization, account/checkout/order-receipt redirects, notices, and HPOS compatibility declaration.
 - **WordPress Privacy:** phone export and erasure, related OTP/index/log cleanup.
 
@@ -124,7 +125,7 @@ All endpoints are POST routes with argument schemas. Public permission callbacks
 
 Phone numbers are normalized into a canonical Iranian mobile representation. The primary phone is stored in `_peyvast_auth_phone`; a keyed canonical hash is stored in `_peyvast_auth_phone_canonical`; the identity table accelerates lookup. Privacy erasure removes these values and related plugin-owned rows.
 
-See `ARCHITECTURE.md` for detailed components and data flow, `STRUCTURE.md` for the repository map, `document.md` for the current technical reference, and `SECURITY.md` for security design and vulnerability reporting.
+See `ARCHITECTURE.md` for detailed components and data flow, `STRUCTURE.md` for the repository map, `document.md` for the current technical reference, `CONTROLLER_AUDIT.md` for the Bricks and Blocks editor control-to-renderer map, and `SECURITY.md` for security design and vulnerability reporting.
 
 ## Production Architecture Notes (1.0.1)
 

@@ -139,7 +139,13 @@ final class AuthState {
 			}
 		}
 
-		// Only bundled, trusted icons are emitted; attachment SVGs are not inlined.
+		if ( $id > 0 ) {
+			$attachment_icon = self::svg_attachment_icon( $id );
+			if ( $attachment_icon !== '' ) {
+				self::$icon_cache[ $cache_key ] = $attachment_icon;
+				return $attachment_icon;
+			}
+		}
 
 		$allowed = array( 'check', 'close', 'error', 'info', 'warning' );
 		if ( $key !== '' && in_array( $key, $allowed, true ) ) {
@@ -152,6 +158,44 @@ final class AuthState {
 		}
 		self::$icon_cache[ $cache_key ] = '';
 		return self::$icon_cache[ $cache_key ];
+	}
+
+	private static function svg_attachment_icon( int $attachment_id ): string {
+		if ( 'image/svg+xml' !== get_post_mime_type( $attachment_id ) ) {
+			return '';
+		}
+
+		$file = get_attached_file( $attachment_id );
+		if ( ! is_string( $file ) || ! is_readable( $file ) ) {
+			return '';
+		}
+
+		$file_size = filesize( $file );
+		if ( false === $file_size || $file_size > 262144 ) {
+			return '';
+		}
+
+		$svg = file_get_contents( $file );
+		if ( ! is_string( $svg ) || ! preg_match( '/^\s*<svg\b/i', $svg ) ) {
+			return '';
+		}
+
+		$allowed = array(
+			'svg'      => array( 'xmlns' => true, 'viewBox' => true, 'width' => true, 'height' => true, 'role' => true, 'aria-hidden' => true, 'focusable' => true, 'class' => true ),
+			'g'        => array( 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'class' => true ),
+			'path'     => array( 'd' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'class' => true ),
+			'circle'   => array( 'cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'class' => true ),
+			'rect'     => array( 'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true, 'ry' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'class' => true ),
+			'line'     => array( 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'class' => true ),
+			'polyline' => array( 'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'class' => true ),
+			'polygon'  => array( 'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'class' => true ),
+		);
+
+		return wp_kses( $svg, $allowed );
+	}
+
+	public static function render_icon( $icon ): string {
+		return self::safe_icon( $icon );
 	}
 
 
@@ -276,6 +320,7 @@ final class AuthState {
 			'login'    => self::attr( $attrs, 'login_text', self::t( 'login' ) ),
 			'register' => self::attr( $attrs, 'register_text', self::t( 'register' ) ),
 			'forgot'   => self::attr( $attrs, 'forgot_text', self::t( 'forgot' ) ),
+			'forgot_send' => self::attr( $attrs, 'forgot_send_text', self::attr( $attrs, 'forgot_text', self::t( 'continue' ) ) ),
 			'resend'   => self::attr( $attrs, 'resend_text', self::t( 'resend' ) ),
 			'google'   => self::attr( $attrs, 'google_text', self::t( 'google' ) ),
 		);

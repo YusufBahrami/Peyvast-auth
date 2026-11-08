@@ -1,6 +1,6 @@
 # Peyvast Auth Architecture
 
-> **Document status:** Peyvast Auth 1.0.1
+> **Document status:** Peyvast Auth 1.0.2
 
 ## Scope
 
@@ -8,13 +8,13 @@ Peyvast Auth is a WordPress plugin organized around domain rules, application us
 
 ## Bootstrap and lifecycle
 
-The bootstrap defines version `1.0.1`, the text domain `peyvast-auth`, filesystem/URL constants, the settings option name, and five canonical table constants (including the OTP delivery queue). It loads the bundled Action Scheduler bootstrap from `lib/action-scheduler` at plugin load time — registering the bundled version and letting Action Scheduler itself select the newest registered runtime version, so the plugin coexists with WooCommerce or any other plugin that bundles Action Scheduler. It registers a PSR-4-like local autoloader mapping `Peyvast\Auth\X\Y` to `src/X/Y.php`, activation/deactivation callbacks, and the `plugins_loaded` boot callback.
+The bootstrap defines version `1.0.2`, the text domain `peyvast-auth`, filesystem/URL constants, the settings option name, and five canonical table constants (including the OTP delivery queue). It loads the bundled Action Scheduler bootstrap from `lib/action-scheduler` at plugin load time — registering the bundled version and letting Action Scheduler itself select the newest registered runtime version, so the plugin coexists with WooCommerce or any other plugin that bundles Action Scheduler. It registers a PSR-4-like local autoloader mapping `Peyvast\Auth\X\Y` to `src/X/Y.php`, activation/deactivation callbacks, and the `plugins_loaded` boot callback.
 
 `Core\Plugin::boot()` runs once. It registers the runtime database-engine notice, starts the guest session and phone identity index, wires the scheduler layer and recurring actions, registers privacy hooks, settings, migration services, admin UI, REST routes, frontend assets, WooCommerce, Bricks, Blocks, and redirect behavior.
 
 ## Scheduling layer
 
-`Infrastructure\Scheduling\Scheduler` is the single owner of every plugin background action. It defines stable namespaced hook names, a dedicated `peyvast-auth` group, unique scheduling helpers, recurring-action creation/recovery (the daily `action_scheduler_ensure_recurring_actions` hook is used unconditionally, kept scheduled through `ActionScheduler_RecurringActionScheduler`), deactivation cancellation. There is no runtime capability detection or version fallback: the plugin requires the bundled Action Scheduler 4.1.0 feature set. Handlers:
+`Infrastructure\Scheduling\Scheduler` is the single owner of every plugin background action. It defines stable namespaced hook names, a dedicated `peyvast-auth` group, unique scheduling helpers, recurring-action creation/recovery (the daily `action_scheduler_ensure_recurring_actions` hook is used unconditionally, kept scheduled through `ActionScheduler_RecurringActionScheduler`), deactivation cancellation. There is no runtime capability detection or version fallback: the plugin requires the bundled Action Scheduler 4.2.0 feature set. Handlers:
 
 - `Scheduler::HOOK_PURGE_OTP_CHALLENGES` (recurring, 15 min) — expired OTP challenge cleanup.
 - `Scheduler::HOOK_PURGE_LOGS` (recurring, daily) — log retention cleanup.
@@ -24,7 +24,7 @@ The bootstrap defines version `1.0.1`, the text domain `peyvast-auth`, filesyste
 - `Scheduler::HOOK_PHONE_INDEX_REBUILD` (chained single actions) — identity-index rebuild batches.
 - `Scheduler::HOOK_MIGRATION_WATCHDOG` (recurring, daily) — re-arms a stalled migration/index chain.
 - `Scheduler::HOOK_LAZY_PHONE_MIGRATION` (async) — background lazy phone migration.
-- `Scheduler::HOOK_DELIVER_OTP` (single actions) — asynchronous provider delivery for OTP transactions queued by versions before 1.0.1. New 1.0.1 OTP requests deliver inside the request and never enqueue this action.
+- `Scheduler::HOOK_DELIVER_OTP` (single actions) — asynchronous provider delivery for OTP transactions queued by versions before 1.0.1. version 1.0.1 OTP requests deliver inside the request and never enqueue this action.
 
 Every job is idempotent and bounded; retries use unique action arguments with exponential backoff; duplicate workers are prevented by database locks.
 
@@ -84,7 +84,7 @@ The adapter passes `Content-Type: text/html; charset=UTF-8` directly to `wp_mail
 
 ### Integrations
 
-WooCommerce integration is optional and guarded by function/class availability. Bricks integration registers elements/tags only when Bricks is available. Blocks integration registers block metadata/renderers only when block APIs are available.
+WooCommerce integration is optional and guarded by function/class availability. Bricks integration registers elements/tags only when Bricks is available; element text controls resolve Bricks dynamic data before shared authentication state is prepared. Blocks integration registers the `blocks/auth` and `blocks/back-button` metadata and server renderers with WordPress block APIs, and its editor script declares the WordPress data dependency it uses.
 
 ## End-to-end flows
 

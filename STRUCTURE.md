@@ -44,6 +44,7 @@
 - `ARCHITECTURE.md`: component and flow reference, including the scheduling layer.
 - `STRUCTURE.md`: this map.
 - `document.md`: current technical documentation of the shipped behavior.
+- `CONTROLLER_AUDIT.md`: Bricks and Blocks controller types, targets, connection status, and native editor patterns.
 - `SECURITY.md`: security policy, design, and private vulnerability reporting guidance.
 - `changelog.txt`: version history and distribution release notes.
 - `readme.txt`: WordPress.org plugin readme with changelog and upgrade notices.

@@ -233,11 +233,47 @@ final class AuthElement extends \Bricks\Element {
 			array(
 				'type'     => 'typography',
 				'group'    => $group,
-				'label'    => 'Icon typography',
+				'label'    => 'Font icon typography',
+				'description' => 'Applies to font icons. Use the SVG controls for SVG icons.',
 				'css'      => array(
 					array(
 						'property' => 'font',
 						'selector' => '.peyvast-auth-button--' . str_replace( '_', '-', $prefix ) . ' i',
+					),
+				),
+				'required' => array( $prefix . '_icon.icon', '!=', '' ),
+			)
+		);
+		$this->control(
+			$prefix . '_iconSvgSize',
+			array(
+				'type'     => 'number',
+				'group'    => $group,
+				'label'    => 'SVG icon size',
+				'units'    => true,
+				'css'      => array(
+					array(
+						'property' => 'width',
+						'selector' => '.peyvast-auth-button--' . str_replace( '_', '-', $prefix ) . ' svg',
+					),
+					array(
+						'property' => 'height',
+						'selector' => '.peyvast-auth-button--' . str_replace( '_', '-', $prefix ) . ' svg',
+					),
+				),
+				'required' => array( $prefix . '_icon.icon', '!=', '' ),
+			)
+		);
+		$this->control(
+			$prefix . '_iconSvgColor',
+			array(
+				'type'     => 'color',
+				'group'    => $group,
+				'label'    => 'SVG icon color',
+				'css'      => array(
+					array(
+						'property' => 'color',
+						'selector' => '.peyvast-auth-button--' . str_replace( '_', '-', $prefix ) . ' svg',
 					),
 				),
 				'required' => array( $prefix . '_icon.icon', '!=', '' ),
@@ -252,7 +288,7 @@ final class AuthElement extends \Bricks\Element {
 				'options'     => $this->control_options['iconPosition'],
 				'inline'      => true,
 				'placeholder' => 'Right',
-				'required'    => array( $prefix . '_icon', '!=', '' ),
+				'required'    => array( $prefix . '_icon.icon', '!=', '' ),
 			)
 		);
 		$selector = '.peyvast-auth-button--' . str_replace( '_', '-', $prefix );
@@ -269,7 +305,7 @@ final class AuthElement extends \Bricks\Element {
 						'selector' => $selector,
 					),
 				),
-				'required' => array( $prefix . '_icon', '!=', '' ),
+				'required' => array( $prefix . '_icon.icon', '!=', '' ),
 			)
 		);
 		$this->control(
@@ -285,7 +321,7 @@ final class AuthElement extends \Bricks\Element {
 						'selector' => $selector,
 					),
 				),
-				'required' => array( $prefix . '_icon', '!=', '' ),
+				'required' => array( $prefix . '_icon.icon', '!=', '' ),
 			)
 		);
 	}
@@ -580,7 +616,8 @@ final class AuthElement extends \Bricks\Element {
 			if ( $key !== 'continue' ) {
 				$this->separator( 'separator_primary_' . $key, $label, 'primary_actions' );
 			}
-			$this->text_control( $key . '_text', $label . ' text', 'primary_actions' );
+			$text_key = 'forgot' === $key ? 'forgot_send_text' : $key . '_text';
+			$this->text_control( $text_key, $label . ' text', 'primary_actions' );
 			$this->icon_button_controls( $key, 'primary_actions', $label );
 		}
 		$this->separator( 'separator_primary_global', 'Global styles', 'primary_actions' );
@@ -801,18 +838,13 @@ final class AuthElement extends \Bricks\Element {
 	public function render() {
 		Assets::enqueue_front();
 		$settings = is_array( $this->settings ) ? $this->settings : array();
-		foreach ( array(
-			'phone_description',
-			'password_description',
-			'otp_description',
-			'register_description',
-			'forgot_description',
-			'reset_description',
-			'information_otp_sent',
-			'information_registration',
-		) as $key ) {
-			if ( array_key_exists( $key, $settings ) ) {
-				$settings[ $key ] = $this->dynamic_text( $settings[ $key ] );
+		foreach ( $settings as $key => $value ) {
+			if ( ! is_string( $value ) ) {
+				continue;
+			}
+
+			if ( preg_match( '/(?:_title|_description|_label|_placeholder|_text)$/', $key ) || in_array( $key, array( 'information_otp_sent', 'information_registration', 'resend_timer_template' ), true ) ) {
+				$settings[ $key ] = $this->dynamic_text( $value );
 			}
 		}
 		$is_builder = function_exists( 'bricks_is_builder' ) && (
@@ -1490,7 +1522,7 @@ final class AuthElement extends \Bricks\Element {
 			$state['placeholders']['password'],
 			$button_options
 		);
-		$stages['forgot']   = self::render_forgot_stage( $state['ids']['forgot'], in_array( 'email', ( AuthenticationCapabilities::field( 'password_reset' )['identifiers'] ?? array() ), true ), $state['placeholders']['forgot_identifier'], $state['texts']['continue'], $state['icons']['continue'], $attrs, $button_options );
+		$stages['forgot']   = self::render_forgot_stage( $state['ids']['forgot'], in_array( 'email', ( AuthenticationCapabilities::field( 'password_reset' )['identifiers'] ?? array() ), true ), $state['placeholders']['forgot_identifier'], $state['texts']['forgot_send'], $state['icons']['forgot'], $attrs, $button_options );
 		$stages['reset']    = self::render_reset_stage( $state['ids']['new_password'], $state['placeholders']['new_password'], $state['icons']['reset_password'], $attrs, $button_options );
 		return $stages;
 	}

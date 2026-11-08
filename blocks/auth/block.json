@@ -55,14 +55,6 @@
     }
   },
   "attributes": {
-    "preview_stage": {
-      "type": "string",
-      "default": "phone"
-    },
-    "preview_mode": {
-      "type": "string",
-      "default": "login"
-    },
     "phone_title": {
       "type": "string",
       "default": ""
@@ -208,6 +200,10 @@
       "default": ""
     },
     "forgot_text": {
+      "type": "string",
+      "default": ""
+    },
+    "forgot_send_text": {
       "type": "string",
       "default": ""
     },

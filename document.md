@@ -1,17 +1,17 @@
 # document.md — current technical documentation
 
-> **Document status:** Approved — Peyvast Auth 1.0.1 (2026-09-13).
+> **Document status:** Approved — Peyvast Auth 1.0.2 (2026-10-29).
 
-Reference for the behaviour of **Peyvast Auth 1.0.1** as it exists today. It describes the code, not an aspiration. Layer boundaries live in `ARCHITECTURE.md`; file-level layout lives in `STRUCTURE.md`.
+Reference for the behaviour of **Peyvast Auth 1.0.2** as it exists today. It describes the code, not an aspiration. Layer boundaries live in `ARCHITECTURE.md`; file-level layout lives in `STRUCTURE.md`.
 
 ## 1. Identity and requirements
 
 | | |
 |---|---|
-| Plugin | `peyvast-auth`, version `1.0.1` (`peyvast-auth.php` header, `PEYVAST_AUTH_VERSION`, `readme.txt` stable tag, `changelog.txt`) |
+| Plugin | `peyvast-auth`, version `1.0.2` (`peyvast-auth.php` header, `PEYVAST_AUTH_VERSION`, `readme.txt` stable tag, `changelog.txt`) |
 | Requirements | WordPress 6.8+, PHP 8.1+ |
 | Database | MySQL/MariaDB with InnoDB required in production. `Installer::schema_ready()` verifies the InnoDB engine via `SHOW TABLE STATUS`, so it reports not-ready on non-MySQL engines (Studio's SQLite layer is a local-development convenience) |
-| Bundled dependency | Action Scheduler 4.1.0 in `lib/action-scheduler`, loaded through its official bootstrap so the newest registered version wins when WooCommerce or another plugin also bundles it |
+| Bundled dependency | Action Scheduler 4.2.0 in `lib/action-scheduler`, loaded through its official bootstrap so the newest registered version wins when WooCommerce or another plugin also bundles it |
 | Text domain | `peyvast-auth` (`languages/peyvast-auth.pot`, `-fa_IR.po`, `-fa_IR.mo`) |
 
 ## 2. Runtime map
@@ -118,7 +118,9 @@ Responses are `{ success, data }`; public payloads are whitelisted in `RestRespo
 
 ## 9. Frontend
 
-`assets/js/auth.js` drives the identifier → OTP → verify → login/register/password stages. It enters the OTP stage only when the send response reports `channels` and `delivery_status: delivered`; `queued`/`retrying` (legacy challenges only) additionally start the bounded `delivery_status` poll (≤7 attempts, exponential). Delivery failure keeps the user on the current stage. Web OTP autofill and the information/privacy presentation are unchanged. Blocks (`blocks/auth`, `blocks/back-button`), Bricks elements and the WooCommerce integration call the same REST endpoints and are unchanged.
+`assets/js/auth.js` drives the identifier → OTP → verify → login/register/password stages. It enters the OTP stage only when the send response reports `channels` and `delivery_status: delivered`; `queued`/`retrying` (legacy challenges only) additionally start the bounded `delivery_status` poll (≤7 attempts, exponential). Delivery failure keeps the user on the current stage. Back navigation tracks the visited stage stack, including browser Back changes; the initial phone stage delegates to browser history so the button returns to the previous page. Web OTP autofill and the information/privacy presentation are unchanged.
+
+Blocks (`blocks/auth`, `blocks/back-button`) are registered from their `block.json` metadata through WordPress block APIs and render server-side. The editor script declares its `wp.data` dependency for block selection and uses server-side rendering for previews. Bricks element text controls resolve dynamic data before preparing the shared authentication state; Bricks CSS controls remain responsible for their native styling bindings. Both integrations and WooCommerce use the same REST endpoints.
 
 ## 10. Privacy, uninstall, integrations
 
@@ -141,6 +143,7 @@ Responses are `{ success, data }`; public payloads are whitelisted in `RestRespo
 | `ARCHITECTURE.md` | Component, layer and flow reference | Approved |
 | `STRUCTURE.md` | File and directory map | Approved |
 | `document.md` | Current technical documentation (this file) | Approved |
+| `CONTROLLER_AUDIT.md` | Bricks and Blocks editor controllers, render targets, and connection status | Static audit |
 | `README.md` | Installation and behaviour reference | Approved |
 | `SECURITY.md` | Security policy, design and reporting | Approved |
 | `changelog.txt` | Release history (distribution file) | Approved |
